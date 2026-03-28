@@ -11,8 +11,7 @@ export default async function OpenQueuePage() {
   const tasks = await prisma.task.findMany({
     where: { type: 'open', status: 'open' },
     include: {
-      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
-      comments: { select: { id: true } }
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } }
     },
     orderBy: { createdAt: 'desc' }
   });

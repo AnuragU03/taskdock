@@ -16,8 +16,7 @@ export default async function BoardPage() {
     include: {
       assignee: {
         select: { id: true, name: true, image: true, color: true, initials: true }
-      },
-      comments: { select: { id: true } } // just get count by having them populated
+      }
     },
     orderBy: { createdAt: 'desc' }
   });
