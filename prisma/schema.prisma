@@ -39,6 +39,10 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  role          String    @default("employee")
+  color         String    @default("#2563EB")
+  initials      String    @default("??")
+  browniePoints Int       @default(0)
   createdAt     DateTime  @default(now())
   
   accounts      Account[]
