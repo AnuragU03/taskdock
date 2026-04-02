@@ -11,7 +11,8 @@ import { createTask } from '@/app/actions/task';
 export default function CreateClient({ user, allUsers }: { user: any; allUsers: any[] }) {
   const router = useRouter();
   const isAdmin = user.role?.toLowerCase() === 'admin';
-  const [f, setF] = useState({ title: '', desc: '', type: 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '' });
+  const isEmployee = user.role?.toLowerCase() === 'employee' || !user.role;
+  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '' });
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -101,7 +102,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
               </select>
             </div>
           </div>
-          {!isAdmin && (
+          {!isAdmin && !isEmployee && (
             <div>
               <Lbl c="Task type *"/>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -117,7 +118,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
               </div>
             </div>
           )}
-          {(f.type === 'assigned' || isAdmin) && (
+          {(f.type === 'assigned' || isAdmin) && !isEmployee && (
             <div>
               <Lbl c={isAdmin ? 'Assign for review' : 'Assign to *'}/>
               <select className="inp" value={f.assignedTo} onChange={e => set('assignedTo', e.target.value)}>

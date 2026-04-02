@@ -8,9 +8,9 @@ export default function AdminClient({ members }: { members: any[] }) {
   const [toast, setToast] = useState<string | null>(null);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 2400); };
 
-  const handleRoleChange = async (userId: string, workspaceId: string, newRole: string) => {
+  const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      await updateUserRole(userId, workspaceId, newRole);
+      await updateUserRole(userId, newRole);
       flash(`Role updated to ${newRole}`);
     } catch {
       flash('Failed to update role');
@@ -30,23 +30,23 @@ export default function AdminClient({ members }: { members: any[] }) {
           <div>Role</div>
         </div>
         
-        {members.map(m => (
-          <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+        {members.map(u => (
+          <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Av user={{ ...m.user, color: m.color, initials: m.initials }} sz={40} />
+              <Av user={u} sz={40} />
               <div>
-                <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 15, color: 'var(--t1)' }}>{m.user.name}</div>
-                <div style={{ fontSize: 13, color: 'var(--t4)', marginTop: 2 }}>{m.user.email}</div>
+                <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 15, color: 'var(--t1)' }}>{u.name}</div>
+                <div style={{ fontSize: 13, color: 'var(--t4)', marginTop: 2 }}>{u.email}</div>
               </div>
             </div>
             <div style={{ fontSize: 16, fontFamily: 'DM Mono, monospace', color: 'var(--accent)', fontWeight: 600 }}>
-              {m.browniePoints}
+              {u.browniePoints}
             </div>
             <div>
               <select 
                 className="inp" 
-                defaultValue={m.role} 
-                onChange={e => handleRoleChange(m.userId, m.workspaceId, e.target.value)}
+                defaultValue={u.role} 
+                onChange={e => handleRoleChange(u.id, e.target.value)}
                 style={{ padding: '6px 10px', fontSize: 14, minHeight: 0 }}
               >
                 <option value="employee">Creative / Employee</option>

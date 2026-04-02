@@ -7,24 +7,24 @@ import { revalidatePath } from "next/cache";
 
 export async function createTask(formData: any) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  if (!session || !session.user || !(session.user as any).id) throw new Error("Unauthorized");
 
   const { title, desc, type, priority, category, dueAt, assignedTo, refLink } = formData;
   const isAdmin = (session.user as any).role === 'admin';
   const status = isAdmin ? 'under_review' : type === 'assigned' ? 'assigned' : 'open';
 
   const workspaceMember = await prisma.workspaceMember.findFirst({
-    where: { userId: session.user.id }
+    where: { userId: (session.user as any).id }
   });
   if (!workspaceMember) throw new Error("User has no workspace setup");
 
   const eventsList = [
-    { id: `ea${Date.now()}`, type: 'TASK_CREATED', label: `Task created${isAdmin ? ' (Admin review)' : ''}`, by: session.user.id, at: new Date().toISOString() },
+    { id: `ea${Date.now()}`, type: 'TASK_CREATED', label: `Task created${isAdmin ? ' (Admin review)' : ''}`, by: (session.user as any).id, at: new Date().toISOString() },
     { 
       id: `eb${Date.now()}`,
       type: isAdmin ? 'TASK_REVIEW_CREATED' : type === 'assigned' ? 'TASK_ASSIGNED' : 'TASK_OPENED',
       label: isAdmin ? 'Opened for admin review' : type === 'assigned' ? 'Assigned to user' : 'Published to open queue',
-      by: session.user.id,
+      by: (session.user as any).id,
       at: new Date().toISOString()
     }
   ];
@@ -41,7 +41,7 @@ export async function createTask(formData: any) {
       refLink,
       type: type || 'assigned',
       assignedToId: type === 'assigned' && assignedTo ? assignedTo : null,
-      createdById: session.user.id,
+      createdById: (session.user as any).id,
       events: JSON.stringify(eventsList),
       comments: JSON.stringify([])
     }
@@ -53,7 +53,7 @@ export async function createTask(formData: any) {
 
 export async function updateTask(taskId: string, data: any) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  if (!session || !session.user || !(session.user as any).id) throw new Error("Unauthorized");
 
   const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
   const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
@@ -64,7 +64,7 @@ export async function updateTask(taskId: string, data: any) {
       ...data,
       events: JSON.stringify([
         ...existingEvents,
-        { id: `eu${Date.now()}`, type: 'TASK_UPDATED', label: 'Task updated', by: session.user.id, at: new Date().toISOString() }
+        { id: `eu${Date.now()}`, type: 'TASK_UPDATED', label: 'Task updated', by: (session.user as any).id, at: new Date().toISOString() }
       ])
     }
   });
@@ -76,7 +76,7 @@ export async function updateTask(taskId: string, data: any) {
 
 export async function pickupTask(taskId: string) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  if (!session || !session.user || !(session.user as any).id) throw new Error("Unauthorized");
 
   const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
   const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
@@ -141,11 +141,13 @@ export async function reviewTask(taskId: string, approved: boolean, fbText: stri
 
   const task = await prisma.task.update({ where: { id: taskId }, data });
 
-  if (approved && taskObj?.assignedToId && taskObj.dueAt && new Date() < new Date(taskObj.dueAt)) {
-    // Award brownie point if completed before deadline
-    await prisma.workspaceMember.update({
-      where: { workspaceId_userId: { workspaceId: taskObj.workspaceId, userId: taskObj.assignedToId } },
-      data: { browniePoints: { increment: 1 } }
+  if (approved && taskObj?.assignedToId && taskObj.dueAt) {
+    const isLate = new Date() > new Date(taskObj.dueAt);
+    
+    // Award brownie point if completed before deadline, Penalize -1 if completed past deadline
+    await prisma.user.update({
+      where: { id: taskObj.assignedToId },
+      data: { browniePoints: { increment: isLate ? -1 : 1 } }
     });
   }
 

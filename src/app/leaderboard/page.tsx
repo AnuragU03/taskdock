@@ -8,8 +8,7 @@ export default async function LeaderboardPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect('/login');
 
-  const members = await prisma.workspaceMember.findMany({
-    include: { user: true },
+  const members = await prisma.user.findMany({
     orderBy: { browniePoints: 'desc' }
   });
 
@@ -19,14 +18,14 @@ export default async function LeaderboardPage() {
       <p style={{ fontSize: 14, color: 'var(--t3)', marginBottom: 24 }}>Top contributors and creatives across the workspace.</p>
       
       <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        {members.map((m, i) => (
+        {members.map((m: any, i: number) => (
           <div key={m.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: i < members.length - 1 ? '1px solid var(--border)' : 'none', background: i === 0 ? 'var(--accent)08' : 'transparent' }}>
             <div style={{ width: 44, fontSize: 18, fontFamily: 'DM Mono, monospace', fontWeight: 600, color: i === 0 ? '#FCD34D' : i === 1 ? '#94A3B8' : i === 2 ? '#B45309' : 'var(--t4)' }}>
               #{i + 1}
             </div>
-            <Av user={{ ...m.user, color: m.color, initials: m.initials }} sz={44} />
+            <Av user={m} sz={44} />
             <div style={{ flex: 1, marginLeft: 16 }}>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 16, color: 'var(--t1)' }}>{m.user.name}</div>
+              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 16, color: 'var(--t1)' }}>{m.name}</div>
               <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2 }}>{m.role}</div>
             </div>
             <div style={{ textAlign: 'right' }}>

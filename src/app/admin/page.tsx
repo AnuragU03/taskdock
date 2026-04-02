@@ -10,8 +10,7 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  const members = await prisma.workspaceMember.findMany({
-    include: { user: true },
+  const members = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' }
   });
 

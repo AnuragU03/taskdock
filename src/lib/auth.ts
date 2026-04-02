@@ -14,6 +14,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, user }: any) {
       if (session.user) {
+        // Auto-Admin: If there are 0 admins in the database, forcefully upgrade this user.
+        if (user.role !== 'admin') {
+          const adminCount = await prisma.user.count({ where: { role: 'admin' } });
+          if (adminCount === 0) {
+            await prisma.user.update({ where: { id: user.id }, data: { role: 'admin' } });
+            user.role = 'admin';
+          }
+        }
         session.user.id = user.id;
         session.user.role = user.role;
         session.user.color = user.color;
