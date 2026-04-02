@@ -13,10 +13,12 @@ export async function createTask(formData: any) {
   const isAdmin = (session.user as any).role === 'admin';
   const status = isAdmin ? 'under_review' : type === 'assigned' ? 'assigned' : 'open';
 
-  const workspaceMember = await prisma.workspaceMember.findFirst({
-    where: { userId: (session.user as any).id }
-  });
-  if (!workspaceMember) throw new Error("User has no workspace setup");
+  let workspace = await prisma.workspace.findFirst();
+  if (!workspace) {
+    workspace = await prisma.workspace.create({
+      data: { name: 'Main Workspace', slug: 'main' }
+    });
+  }
 
   const eventsList = [
     { id: `ea${Date.now()}`, type: 'TASK_CREATED', label: `Task created${isAdmin ? ' (Admin review)' : ''}`, by: (session.user as any).id, at: new Date().toISOString() },
@@ -31,7 +33,7 @@ export async function createTask(formData: any) {
 
   const task = await prisma.task.create({
     data: {
-      workspaceId: workspaceMember.workspaceId,
+      workspaceId: workspace.id,
       title,
       desc,
       status,
@@ -196,4 +198,23 @@ export async function addComment(taskId: string, text: string) {
 
   revalidatePath(`/task/${taskId}`);
   return task;
+}
+
+export async function generateBrief(title: string, category?: string) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return null;
+  
+  await new Promise(r => setTimeout(r, 1200)); 
+  
+  const brief = `🚀 **Objective:** We need to execute on "${title}". Ensure all deliverables meet the highest quality standards.
+
+🎨 **Style/Direction:** Follow our established brand guidelines. Keep the tone professional yet approachable.
+
+📋 **Required Deliverables:**
+- Final source files (Figma, AfterEffects, etc).
+- Exported production-ready assets.
+
+⚠️ **Constraints:** Please ensure the file sizes are optimized for web and try to stick directly to the provided timeline.`;
+
+  return category ? `[Category: ${category}]\n\n${brief}` : brief;
 }

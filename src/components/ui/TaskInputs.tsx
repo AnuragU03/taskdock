@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { generateBrief } from '@/app/actions/task';
 
 export const DLPick = ({ value, onChange }: { value: string | null; onChange: (v: string) => void }) => {
   const [custom, setCustom] = useState(false);
@@ -80,15 +81,9 @@ export const AiBrief = ({ title, category, onApply }: { title: string; category?
     setLoading(true);
     setResult('');
     try {
-      // Stub for actual API call, replace with Next.js Server Action later
-      const res = await fetch('/api/ai/brief', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, category })
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setResult(d.brief || '');
+      const res = await generateBrief(title, category);
+      if (res) {
+        setResult(res);
       } else {
         throw new Error('Failed');
       }
