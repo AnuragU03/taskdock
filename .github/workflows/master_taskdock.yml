@@ -1,4 +1,4 @@
-# Optimized: standalone build → deploy only ~30MB instead of ~300MB+
+# Standalone build + Prisma-safe deployment
 name: Build and deploy Node.js app to Azure Web App - taskdock
 
 on:
@@ -41,14 +41,25 @@ jobs:
 
       - name: Prepare standalone package
         run: |
-          # Copy static + public into standalone
-          cp -r build/static build/standalone/build/static
-          cp -r public build/standalone/public 2>/dev/null || true
-          # Copy prisma schema for db push on startup
-          mkdir -p build/standalone/prisma
-          cp prisma/schema.prisma build/standalone/prisma/
-          # Zip only the standalone folder (~30MB vs ~300MB)
-          cd build/standalone
+          STANDALONE=build/standalone
+          
+          # Copy static assets + public folder
+          cp -r build/static $STANDALONE/build/static
+          cp -r public $STANDALONE/public 2>/dev/null || true
+          
+          # Copy Prisma schema for runtime db push
+          mkdir -p $STANDALONE/prisma
+          cp prisma/schema.prisma $STANDALONE/prisma/
+          
+          # Copy Prisma CLI (needed for db push at startup)
+          cp -r node_modules/prisma $STANDALONE/node_modules/prisma 2>/dev/null || true
+          cp -r node_modules/@prisma $STANDALONE/node_modules/@prisma 2>/dev/null || true
+          
+          # Copy generated Prisma client engine
+          cp -r node_modules/.prisma $STANDALONE/node_modules/.prisma 2>/dev/null || true
+          
+          # Zip standalone folder
+          cd $STANDALONE
           zip -r ../../release.zip . -q
 
       - name: Login to Azure
@@ -57,6 +68,11 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E44134D691ED4ECDBDF671C7093D4636 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B374DFB3F20644B797FB0689A2A441E2 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E604146EAEC04E6F914F0F45189FE092 }}
+
+      - name: Set Azure startup command
+        run: |
+          az webapp config set --name taskdock --resource-group taskdock_group \
+            --startup-file "node node_modules/prisma/build/index.js db push --accept-data-loss && node server.js"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
