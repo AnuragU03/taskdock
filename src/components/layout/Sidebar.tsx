@@ -22,13 +22,14 @@ interface SidebarProps {
 export const Sidebar = ({ user, unreadNotifsCount }: SidebarProps) => {
   const pathname = usePathname();
   const canCreate = true; // All roles can create tasks (employees create open-queue tasks)
+  const userRole = (user.role || 'employee').toLowerCase();
   
   const nav = [
     { id: '/', l: 'Board', ic: '⊞' },
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
-    ...( user.role.toLowerCase() === 'admin' ? [{ id: '/admin', l: 'Settings', ic: '⬡' }] : [])
+    ...( userRole === 'admin' ? [{ id: '/admin', l: 'Settings', ic: '⬡' }] : [])
   ];
 
   return (
@@ -84,7 +85,7 @@ export const Sidebar = ({ user, unreadNotifsCount }: SidebarProps) => {
             <img src={user.image} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${user.color || '#555'}` }} alt="Avatar" />
           ) : (
             <div style={{ width: 26, height: 26, borderRadius: '50%', background: user.color || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#fff', flexShrink: 0 }}>
-              {user.initials || user.name.charAt(0).toUpperCase()}
+              {user.initials || (user.name || '?').charAt(0).toUpperCase()}
             </div>
           )}
           <div style={{ minWidth: 0 }}>

@@ -82,8 +82,9 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
   const isOpen = task.type === 'open' && task.status === 'open';
   const hasOut = task.subText || task.subLink;
   
-  const events = task.events ? JSON.parse(task.events) : [];
-  const commentsList = task.comments ? JSON.parse(task.comments) : [];
+  const safeParse = (s: string | null) => { try { return s ? JSON.parse(s) : []; } catch { return []; } };
+  const events = safeParse(task.events);
+  const commentsList = safeParse(task.comments);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>

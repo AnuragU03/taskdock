@@ -76,7 +76,7 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
       <Divider />
       
       {/* Assignee filters (managers/admins only usually, but show non-admins) */}
-      {users.filter(u => u.role.toLowerCase() !== 'admin').map(u => {
+      {users.filter(u => (u.role || 'employee').toLowerCase() !== 'admin').map(u => {
         const on = (filters.assignee || []).includes(u.id);
         return (
           <button key={u.id} onClick={() => tog('assignee', u.id)} style={{ padding: '2px 8px 2px 3px', borderRadius: 120, border: `1px solid ${on ? u.color : 'var(--border)'}`, background: on ? u.color + '22' : 'var(--bg2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all .12s', flexShrink: 0 }}>

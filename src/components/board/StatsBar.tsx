@@ -32,7 +32,7 @@ interface StatsBarProps {
 }
 
 export const StatsBar = ({ tasks, userRole }: StatsBarProps) => {
-  const role = userRole.toLowerCase();
+  const role = (userRole || 'employee').toLowerCase();
   const def = role === 'admin' ? ['total', 'active', 'od', 'done'] : role === 'manager' ? ['sub', 'ip', 'od', 'due2d'] : ['ip', 'sub', 'done', 'due2d'];
   const [vis, setVis] = useState<string[]>(def);
   const [edit, setEdit] = useState(false);
