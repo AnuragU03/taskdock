@@ -52,6 +52,7 @@ export async function createTask(formData: any) {
   });
 
   revalidatePath('/');
+  revalidatePath('/open-queue');
   return task;
 }
 
@@ -123,6 +124,7 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
     }
   });
 
+  revalidatePath('/');
   revalidatePath(`/task/${taskId}`);
   return task;
 }
@@ -156,6 +158,8 @@ export async function reviewTask(taskId: string, approved: boolean, fbText: stri
     });
   }
 
+  revalidatePath('/');
+  revalidatePath('/leaderboard');
   revalidatePath(`/task/${taskId}`);
   return task;
 }
@@ -178,6 +182,7 @@ export async function reopenTask(taskId: string) {
     }
   });
 
+  revalidatePath('/');
   revalidatePath(`/task/${taskId}`);
   return task;
 }
