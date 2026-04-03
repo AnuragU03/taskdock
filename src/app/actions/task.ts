@@ -129,7 +129,7 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
   return task;
 }
 
-export async function reviewTask(taskId: string, approved: boolean, fbText: string) {
+export async function reviewTask(taskId: string, approved: boolean, fbText: string, score: number) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
   if ((session.user as any).role !== 'admin') throw new Error("Requires admin role");
@@ -140,9 +140,10 @@ export async function reviewTask(taskId: string, approved: boolean, fbText: stri
   const data: any = {
     status: approved ? 'completed' : 'rejected',
     fbText,
+    adminScore: score,
     events: JSON.stringify([
       ...existingEvents,
-      { id: `er${Date.now()}`, type: approved ? 'TASK_APPROVED' : 'TASK_REJECTED', label: approved ? `Approved by ${session.user.name}` : `Rejected by ${session.user.name}`, by: (session.user as any).id, at: new Date().toISOString() }
+      { id: `er${Date.now()}`, type: approved ? 'TASK_APPROVED' : 'TASK_REJECTED', label: approved ? `Approved by ${session.user.name} (Score: ${score}/5)` : `Rejected by ${session.user.name} (Score: ${score}/5)`, by: (session.user as any).id, at: new Date().toISOString() }
     ])
   };
 

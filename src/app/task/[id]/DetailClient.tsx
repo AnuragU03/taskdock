@@ -26,6 +26,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
   const [sText, setSText] = useState('');
   const [sLink, setSLink] = useState('');
   const [fbText, setFbText] = useState('');
+  const [score, setScore] = useState(0);
   const [showSub, setShowSub] = useState(initTask.status === 'in_progress' && initTask.assignedToId === user.id);
   const [showRev, setShowRev] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -45,12 +46,14 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         const u = await submitWork(task.id, sText, sLink);
         setTask(u); setShowSub(false); flash('Submitted ✓');
       } else if (action === 'approve') {
-        const u = await reviewTask(task.id, true, fbText);
-        setTask(u); setShowRev(false); flash('Task approved!');
+        if (!score) { flash('Please select a score first'); return; }
+        const u = await reviewTask(task.id, true, fbText, score);
+        setTask(u); setShowRev(false); setScore(0); flash('Task approved!');
       } else if (action === 'reject') {
-        if (!fbText) return;
-        const u = await reviewTask(task.id, false, fbText);
-        setTask(u); setShowRev(false); flash('Sent back for revision');
+        if (!score) { flash('Please select a score first'); return; }
+        if (!fbText) { flash('Feedback required for rejection'); return; }
+        const u = await reviewTask(task.id, false, fbText, score);
+        setTask(u); setShowRev(false); setScore(0); flash('Sent back for revision');
       } else if (action === 'reopen') {
         const u = await reopenTask(task.id);
         setTask(u); flash('Reopened');
@@ -147,8 +150,15 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         
         {task.fbText && (
           <div style={{ margin: '0 16px 12px', background: task.status === 'completed' ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${task.status === 'completed' ? 'var(--green)' : 'var(--red)'}33`, borderRadius: 12, padding: '10px 12px' }}>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: task.status === 'completed' ? 'var(--green)' : 'var(--red)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 5 }}>
-              {task.status === 'completed' ? '✓ Approved' : '✗ Rejected'} — Feedback
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: task.status === 'completed' ? 'var(--green)' : 'var(--red)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+                {task.status === 'completed' ? '✓ Approved' : '✗ Rejected'} — Feedback
+              </div>
+              {task.adminScore ? (
+                <div style={{ fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, color: task.status === 'completed' ? 'var(--green)' : 'var(--red)' }}>
+                  {task.adminScore} / 5 ★
+                </div>
+              ) : null}
             </div>
             <p style={{ fontSize: 15, color: task.status === 'completed' ? 'var(--green)' : 'var(--red)', lineHeight: 1.75, fontStyle: 'italic', opacity: 0.85 }}>{task.fbText}</p>
           </div>
@@ -220,7 +230,31 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
             <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', marginBottom: 16 }} className="fu">
               <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Review submission</div>
               {task.subText && <div style={{ background: 'var(--bg1)', borderRadius: 7, padding: '9px 11px', marginBottom: 7, fontSize: 15, color: 'var(--t2)', lineHeight: 1.75, fontStyle: 'italic' }}>{task.subText}</div>}
-              {task.subLink && <div style={{ background: 'var(--accent-dim)', borderRadius: 7, padding: '7px 10px', marginBottom: 8, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#FB923C' }}>{task.subLink}</div>}
+              {task.subLink && <div style={{ background: 'var(--accent-dim)', borderRadius: 7, padding: '7px 10px', marginBottom: 12, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#FB923C' }}>{task.subLink}</div>}
+              
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button 
+                    key={s} 
+                    onClick={() => setScore(s)} 
+                    style={{ 
+                      flex: 1, 
+                      padding: '10px 0', 
+                      borderRadius: 8, 
+                      border: `1.5px solid ${score === s ? 'var(--accent)' : 'var(--border)'}`, 
+                      background: score === s ? 'var(--accent-dim)' : 'var(--bg1)', 
+                      color: score === s ? 'var(--accent)' : 'var(--t2)',
+                      fontFamily: 'var(--font-sans), sans-serif',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.12s'
+                    }}
+                  >
+                    {s} ★
+                  </button>
+                ))}
+              </div>
               <textarea className="inp" value={fbText} onChange={e => setFbText(e.target.value)} placeholder="Feedback (required if rejecting)" style={{ marginBottom: 12 }} />
               <div style={{ display: 'flex', gap: 7 }}>
                 <button onClick={() => handleAction('approve')} style={{ background: 'var(--green)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✓ Approve</button>

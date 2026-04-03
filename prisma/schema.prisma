@@ -103,6 +103,7 @@ model Task {
   subText      String?
   subLink      String?
   fbText       String?
+  adminScore   Int?     // Score given by admin out of 5
   events       String?  // Stored as JSON string due to SQLite constraints
   comments     String?  // Stored as JSON string
   createdAt    DateTime @default(now())
