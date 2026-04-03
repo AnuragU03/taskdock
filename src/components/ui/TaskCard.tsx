@@ -40,7 +40,7 @@ export const getUrgency = (cd: any) => {
 };
 
 export const CardHeader = ({ task }: { task: TaskProps }) => {
-  const cd = useCD(task.dueAt);
+  const cd = useCD(task.dueAt || null);
   const au = task.assignee;
   const done = ['completed', 'cancelled'].includes(task.status);
   const isUnpicked = task.type === 'open' && !task.assignedTo && task.status === 'open';
@@ -175,7 +175,14 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 7, borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
           <SPill status={task.status} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {(task.comments?.length || 0) > 0 && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>{task.comments?.length}💬</span>}
+            {(() => {
+              let count = 0;
+              if (Array.isArray(task.comments)) count = task.comments.length;
+              else if (typeof task.comments === 'string') {
+                try { count = JSON.parse(task.comments).length; } catch {}
+              }
+              return count > 0 ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>{count}💬</span> : null;
+            })()}
           </div>
         </div>
       </div>
