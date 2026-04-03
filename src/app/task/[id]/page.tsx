@@ -4,7 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import DetailClient from "./DetailClient";
 
-export default async function TaskDetailPage({ params }: { params: { id: string } }) {
+export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {
@@ -12,7 +13,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
   }
 
   const task = await prisma.task.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
       createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
