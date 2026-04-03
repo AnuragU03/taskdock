@@ -21,15 +21,14 @@ interface SidebarProps {
 
 export const Sidebar = ({ user, unreadNotifsCount }: SidebarProps) => {
   const pathname = usePathname();
-  const canCreate = ['admin', 'manager'].includes(user.role.toLowerCase());
+  const canCreate = true; // All roles can create tasks (employees create open-queue tasks)
   
   const nav = [
     { id: '/', l: 'Board', ic: '⊞' },
-    { id: '/list', l: 'All Tasks', ic: '☰' },
-    ...( !['admin', 'manager'].includes(user.role.toLowerCase()) ? [{ id: '/open-queue', l: 'Open Queue', ic: '◈' }] : []),
+    { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
-    ...( user.role.toLowerCase() === 'admin' ? [{ id: '/admin', l: 'Admin', ic: '⬡' }] : [])
+    ...( user.role.toLowerCase() === 'admin' ? [{ id: '/admin', l: 'Settings', ic: '⬡' }] : [])
   ];
 
   return (

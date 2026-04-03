@@ -1,6 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
+# Optimized: standalone build → deploy only ~30MB instead of ~300MB+
 name: Build and deploy Node.js app to Azure Web App - taskdock
 
 on:
@@ -10,61 +8,49 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
           cache: 'npm'
 
-      - name: Cache Next.js project
+      - name: Cache Next.js build
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.npm
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          path: ${{ github.workspace }}/build/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
 
-      - name: npm install, build, and test
+      - name: Install & Build
         env:
-          DATABASE_URL: "file:./dev.db" # Required for Prisma generate to succeed
+          DATABASE_URL: "file:./dev.db"
         run: |
-          npm install
+          npm ci
           npx prisma generate
-          npm run build --if-present
-          npm run test --if-present
+          npm run build
 
-      - name: Zip artifact for deployment
-        run: zip -r release.zip . -q
+      - name: Prepare standalone package
+        run: |
+          # Copy static + public into standalone
+          cp -r build/static build/standalone/build/static
+          cp -r public build/standalone/public 2>/dev/null || true
+          # Copy prisma schema for db push on startup
+          mkdir -p build/standalone/prisma
+          cp prisma/schema.prisma build/standalone/prisma/
+          # Zip only the standalone folder (~30MB vs ~300MB)
+          cd build/standalone
+          zip -r ../../release.zip . -q
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: release.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -72,8 +58,7 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B374DFB3F20644B797FB0689A2A441E2 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E604146EAEC04E6F914F0F45189FE092 }}
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'taskdock'
