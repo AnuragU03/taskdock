@@ -18,13 +18,15 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
   
   const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }));
   const employees = allUsers.filter(u => u.role?.toLowerCase() !== 'admin');
-  const valid = f.title && f.desc && f.dueAt && (f.type === 'open' || f.assignedTo);
+  const valid = f.title && f.desc && f.dueAt;
   
   const submit = async () => {
     if (!valid || loading) return;
     setLoading(true);
     try {
-      await createTask(f);
+      // Auto-detect type: no assignee = open queue
+      const payload = { ...f, type: f.assignedTo ? 'assigned' : 'open' };
+      await createTask(payload);
       setToast('💳 Task created successfully!');
       setTimeout(() => router.push('/'), 1300);
     } catch (e) {
@@ -36,7 +38,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
   const previewTask = {
     ...f, 
     id: 'prev', 
-    status: isAdmin ? 'under_review' : f.type === 'assigned' ? 'assigned' : 'open', 
+    status: f.assignedTo ? (isAdmin ? 'under_review' : 'assigned') : 'open', 
     dueAt: f.dueAt ? new Date(f.dueAt.includes('T') ? f.dueAt : f.dueAt + 'T00:00') : new Date(Date.now() + 172800000),
     assignee: allUsers.find(u => u.id === f.assignedTo)
   };
@@ -102,27 +104,11 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
               </select>
             </div>
           </div>
-          {!isAdmin && !isEmployee && (
+          {!isEmployee && (
             <div>
-              <Lbl c="Task type *"/>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {[
-                  ['assigned', 'Assigned', '→'],
-                  ['open', 'Open pickup', '◈']
-                ].map(([v, l, ic]) => (
-                  <button key={v} type="button" onClick={() => set('type', v)} style={{ padding: '10px', borderRadius: 11, border: `1px solid ${f.type === v ? 'var(--accent)' : 'var(--border)'}`, background: f.type === v ? 'var(--accent-dim)' : 'var(--bg2)', cursor: 'pointer', textAlign: 'left', transition: 'all .11s' }}>
-                    <div style={{ fontSize: 18, color: f.type === v ? 'var(--accent)' : 'var(--t3)', marginBottom: 2 }}>{ic}</div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: f.type === v ? 'var(--accent)' : 'var(--t1)', fontFamily: 'DM Sans, sans-serif' }}>{l}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {(f.type === 'assigned' || isAdmin) && !isEmployee && (
-            <div>
-              <Lbl c={isAdmin ? 'Assign for review' : 'Assign to *'}/>
+              <Lbl c="Assign to" sub="Leave empty → task goes to Open Queue for anyone to pick up"/>
               <select className="inp" value={f.assignedTo} onChange={e => set('assignedTo', e.target.value)}>
-                <option value="">Select person…</option>
+                <option value="">No assignee (Open Queue) ◈</option>
                 {employees.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
               </select>
             </div>
@@ -141,7 +127,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
             className="bp" 
             style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 16, borderRadius: 12, marginTop: 4, opacity: valid && !loading ? 1 : 0.4, cursor: valid && !loading ? 'pointer' : 'not-allowed' }}
           >
-            {loading ? 'Creating...' : isAdmin ? 'Create Review Task →' : 'Create Task →'}
+            {loading ? 'Creating...' : f.assignedTo ? 'Assign Task →' : 'Create Open Task ◈'}
           </button>
         </div>
       </div>
