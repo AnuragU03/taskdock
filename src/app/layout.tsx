@@ -7,8 +7,8 @@ import { authOptions } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { prisma } from "@/lib/prisma";
 
-const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
-const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"] });
+const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
+const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "TaskDock - Creative OS",
@@ -35,7 +35,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${dmSans.className} ${dmMono.className} antialiased`}>
+      <body className={`${dmSans.variable} ${dmMono.variable} antialiased`}>
         <AuthProvider>
           {session ? (
             <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg0)' }}>

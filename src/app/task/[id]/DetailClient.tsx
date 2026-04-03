@@ -93,7 +93,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
       {/* LEFT COLUMN */}
       <div style={{ width: 360, flexShrink: 0, borderRight: '1px solid var(--border)', background: 'var(--bg1)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', fontSize: 14, fontFamily: 'DM Sans, sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>← Board</button>
+          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>← Board</button>
         </div>
         
         <div style={{ background: 'var(--bg0)', overflow: 'hidden' }}>
@@ -110,11 +110,11 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         
         {task.refLink && (
           <div style={{ margin: '12px 16px', background: 'var(--accent-dim)', border: '1px solid var(--accent)33', borderRadius: 12, padding: '10px 12px' }}>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 6 }}>Reference</div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 6 }}>Reference</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <div style={{ width: 26, height: 26, background: 'var(--accent)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 15 }}>↗</div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: '#FB923C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#FB923C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <a href={task.refLink} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
                     {task.refLink.replace('https://', '')}
                   </a>
@@ -127,7 +127,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         
         {hasOut && (
           <div style={{ margin: '0 16px 12px', background: 'var(--green-bg)', border: '1px solid var(--green)33', borderRadius: 12, padding: '10px 12px' }}>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 12, height: 12, background: 'var(--green)', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bg0)', fontSize: 17, fontWeight: 700 }}>✓</span>
               Output delivered
             </div>
@@ -135,7 +135,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
             {task.subLink && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(0,0,0,.2)', borderRadius: 6, padding: '5px 8px' }}>
                 <span style={{ fontSize: 18, color: 'var(--green)' }}>↗</span>
-                <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--green)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <a href={task.subLink} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
                     {task.subLink.replace('https://', '')}
                   </a>
@@ -147,7 +147,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         
         {task.fbText && (
           <div style={{ margin: '0 16px 12px', background: task.status === 'completed' ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${task.status === 'completed' ? 'var(--green)' : 'var(--red)'}33`, borderRadius: 12, padding: '10px 12px' }}>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: task.status === 'completed' ? 'var(--green)' : 'var(--red)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 5 }}>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: task.status === 'completed' ? 'var(--green)' : 'var(--red)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 5 }}>
               {task.status === 'completed' ? '✓ Approved' : '✗ Rejected'} — Feedback
             </div>
             <p style={{ fontSize: 15, color: task.status === 'completed' ? 'var(--green)' : 'var(--red)', lineHeight: 1.75, fontStyle: 'italic', opacity: 0.85 }}>{task.fbText}</p>
@@ -155,7 +155,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         )}
         
         <div style={{ padding: '10px 16px 18px', flex: 1, overflowY: 'auto' }}>
-          <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>Audit trail</div>
+          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>Audit trail</div>
           {events.map((e: any, i: number) => (
             <div key={e.id} style={{ display: 'flex', gap: 8 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 18 }}>
@@ -166,7 +166,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
               </div>
               <div style={{ paddingBottom: 9, paddingTop: 0 }}>
                 <div style={{ fontSize: 14, color: 'var(--t2)' }}>{e.label}</div>
-                <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', marginTop: 1 }}>{e.by ? gU(e.by)?.name : 'System'} · {fmtRel(e.at)}</div>
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', marginTop: 1 }}>{e.by ? gU(e.by)?.name : 'System'} · {fmtRel(e.at)}</div>
               </div>
             </div>
           ))}
@@ -177,7 +177,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
       <div style={{ flex: 1, background: 'var(--bg0)', minWidth: 0, overflowY: 'auto' }}>
         <div style={{ padding: '24px 28px', maxWidth: 620 }}>
           <div style={{ marginBottom: 16 }}>
-            <h1 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px', lineHeight: 1.2, marginBottom: 8 }}>{task.title}</h1>
+            <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px', lineHeight: 1.2, marginBottom: 8 }}>{task.title}</h1>
             <p style={{ fontSize: 14, color: 'var(--t2)', lineHeight: 1.9, fontWeight: 300 }}>{task.desc}</p>
           </div>
           
@@ -185,10 +185,10 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
             {[
               { l: 'Created by', v: <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}><Av user={task.createdBy} sz={40} /><span style={{ fontSize: 15, color: 'var(--t1)' }}>{task.createdBy?.name}</span></div> },
               { l: 'Assigned to', v: task.assignee ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}><Av user={task.assignee} sz={40} /><span style={{ fontSize: 15, color: 'var(--t1)' }}>{task.assignee.name}</span></div> : <span style={{ fontSize: 13, color: 'var(--t4)', marginTop: 5, display: 'block' }}>—</span> },
-              { l: 'Category', v: <div style={{ marginTop: 5 }}>{task.category ? <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', background: 'var(--bg3)', padding: '2px 8px', borderRadius: 5, color: 'var(--t2)' }}>{task.category}</span> : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}</div> }
+              { l: 'Category', v: <div style={{ marginTop: 5 }}>{task.category ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', padding: '2px 8px', borderRadius: 5, color: 'var(--t2)' }}>{task.category}</span> : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}</div> }
             ].map(({ l, v }) => (
               <div key={l} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 11, padding: '9px 11px' }}>
-                <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{l}</div>{v}
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{l}</div>{v}
               </div>
             ))}
           </div>
@@ -206,7 +206,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           
           {showSub && (
             <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', marginBottom: 16 }} className="fu">
-              <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Submit your work</div>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Submit your work</div>
               <textarea className="inp" value={sText} onChange={e => setSText(e.target.value)} placeholder="What did you create / build / write?" style={{ marginBottom: 7 }} />
               <input className="inp" value={sLink} onChange={e => setSLink(e.target.value)} placeholder="Output link (Figma, Docs, Notion…)" style={{ marginBottom: 12 }} />
               <div style={{ display: 'flex', gap: 7 }}>
@@ -218,20 +218,20 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           
           {showRev && (
             <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', marginBottom: 16 }} className="fu">
-              <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Review submission</div>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Review submission</div>
               {task.subText && <div style={{ background: 'var(--bg1)', borderRadius: 7, padding: '9px 11px', marginBottom: 7, fontSize: 15, color: 'var(--t2)', lineHeight: 1.75, fontStyle: 'italic' }}>{task.subText}</div>}
-              {task.subLink && <div style={{ background: 'var(--accent-dim)', borderRadius: 7, padding: '7px 10px', marginBottom: 8, fontSize: 12, fontFamily: 'DM Mono, monospace', color: '#FB923C' }}>{task.subLink}</div>}
+              {task.subLink && <div style={{ background: 'var(--accent-dim)', borderRadius: 7, padding: '7px 10px', marginBottom: 8, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#FB923C' }}>{task.subLink}</div>}
               <textarea className="inp" value={fbText} onChange={e => setFbText(e.target.value)} placeholder="Feedback (required if rejecting)" style={{ marginBottom: 12 }} />
               <div style={{ display: 'flex', gap: 7 }}>
-                <button onClick={() => handleAction('approve')} style={{ background: 'var(--green)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✓ Approve</button>
-                <button onClick={() => handleAction('reject')} style={{ background: 'var(--red)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✗ Reject</button>
+                <button onClick={() => handleAction('approve')} style={{ background: 'var(--green)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✓ Approve</button>
+                <button onClick={() => handleAction('reject')} style={{ background: 'var(--red)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✗ Reject</button>
                 <button onClick={() => setShowRev(false)} className="bg">Cancel</button>
               </div>
             </div>
           )}
           
           <div>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>
               Discussion ({commentsList.length})
             </div>
             {commentsList.length === 0 && <p style={{ fontSize: 13, color: 'var(--t4)', fontStyle: 'italic', marginBottom: 12 }}>No comments yet.</p>}
@@ -244,8 +244,8 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
                     <Av user={au} sz={40} />
                     <div style={{ flex: 1, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
-                        <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 16, color: 'var(--t1)' }}>{au?.name}</span>
-                        <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)' }}>{fmtRel(c.at)}</span>
+                        <span style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 16, color: 'var(--t1)' }}>{au?.name}</span>
+                        <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>{fmtRel(c.at)}</span>
                       </div>
                       <p style={{ fontSize: 15, color: 'var(--t2)', lineHeight: 1.75 }}>{c.text}</p>
                     </div>

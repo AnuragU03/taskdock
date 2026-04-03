@@ -42,8 +42,8 @@ export const StatsBar = ({ tasks, userRole }: StatsBarProps) => {
       <div style={{ display: 'flex', gap: 9, flex: 1, flexWrap: 'wrap' }}>
         {SOPTS.filter(o => vis.includes(o.id)).map(o => (
           <div key={o.id} style={{ background: 'var(--bg3)', borderRadius: 12, padding: '9px 14px', minWidth: 80, flexShrink: 0 }}>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.09em', marginBottom: 4 }}>{o.l}</div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 700, color: o.ac || 'var(--t1)', lineHeight: 1 }}>{o.fn(tasks)}</div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.09em', marginBottom: 4 }}>{o.l}</div>
+            <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: o.ac || 'var(--t1)', lineHeight: 1 }}>{o.fn(tasks)}</div>
           </div>
         ))}
       </div>
@@ -53,7 +53,7 @@ export const StatsBar = ({ tasks, userRole }: StatsBarProps) => {
         <div className="overlay" onClick={e => e.target === e.currentTarget && setEdit(false)}>
           <div className="modal" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)' }}>Customize stats</h3>
+              <h3 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)' }}>Customize stats</h3>
               <button onClick={() => setEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t3)' }}>×</button>
             </div>
             <p style={{ fontSize: 13, color: 'var(--t3)', marginBottom: 14 }}>Choose up to 6 metrics for your header.</p>
@@ -62,8 +62,8 @@ export const StatsBar = ({ tasks, userRole }: StatsBarProps) => {
               return (
                 <div key={o.id} onClick={() => on ? setVis(v => v.filter(x => x !== o.id)) : vis.length < 6 && setVis(v => [...v, o.id])} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 11, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-dim)' : 'var(--bg3)', cursor: 'pointer', marginBottom: 5, transition: 'all .11s' }}>
                   <div>
-                    <div style={{ fontSize: 14, color: 'var(--t1)', fontFamily: 'DM Sans, sans-serif', fontWeight: 500 }}>{o.l}</div>
-                    <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t3)', marginTop: 1 }}>{o.fn(tasks)} now</div>
+                    <div style={{ fontSize: 14, color: 'var(--t1)', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}>{o.l}</div>
+                    <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', marginTop: 1 }}>{o.fn(tasks)} now</div>
                   </div>
                   <Tog on={on} onChange={() => {}} />
                 </div>

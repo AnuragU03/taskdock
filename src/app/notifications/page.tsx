@@ -26,7 +26,7 @@ export default async function NotificationsPage() {
 
   return (
     <div style={{ padding: '30px 40px', maxWidth: 800, margin: '0 auto' }}>
-      <h1 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px', marginBottom: 6 }}>Notifications</h1>
+      <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px', marginBottom: 6 }}>Notifications</h1>
       <p style={{ fontSize: 14, color: 'var(--t3)', marginBottom: 24 }}>Your recent alerts and task updates.</p>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -35,7 +35,7 @@ export default async function NotificationsPage() {
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: n.read ? 'transparent' : 'var(--accent)', marginTop: 6 }} />
             <div>
               <div style={{ fontSize: 15, color: 'var(--t1)', lineHeight: 1.6 }}>{n.text}</div>
-              <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', marginTop: 4 }}>{fmtRel(n.createdAt)}</div>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', marginTop: 4 }}>{fmtRel(n.createdAt)}</div>
             </div>
           </div>
         ))}

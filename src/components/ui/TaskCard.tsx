@@ -55,7 +55,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
               <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{au?.name || 'Unassigned'}</div>
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 14, fontFamily: 'DM Mono, monospace', color: 'var(--t4)' }}>No deadline</div>
+              <div style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>No deadline</div>
             </div>
           </div>
         </div>
@@ -73,7 +73,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
       )}
       <div>
         <div style={{ fontSize: 16, fontWeight: 600, color: '#34D399' }}>{au?.name || 'Completed'}</div>
-        <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'rgba(52,211,153,.6)', marginTop: 3 }}>Task completed ✓</div>
+        <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'rgba(52,211,153,.6)', marginTop: 3 }}>Task completed ✓</div>
       </div>
     </div>
   );
@@ -92,7 +92,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
             <div style={{ fontSize: 20, fontWeight: 700, color: cd.color, letterSpacing: '-1px', lineHeight: 1 }}>
               {String(cd.d * 24 + cd.h).padStart(2, '0')}H:{String(cd.m).padStart(2, '0')}M
             </div>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: cd.color, opacity: .6, marginTop: 2 }}>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: cd.color, opacity: .6, marginTop: 2 }}>
               {cd.d > 0 ? `+${cd.d}d ` : ''}remaining
             </div>
           </div>
@@ -122,12 +122,12 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{au?.name || 'Unassigned'}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
             <span className="ld" style={{ background: urg?.color }} />
-            <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: urg?.color, textTransform: 'uppercase', letterSpacing: '.08em' }}>{cd.exp ? 'overdue' : cd.urgent ? 'due soon' : 'in progress'}</span>
+            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: urg?.color, textTransform: 'uppercase', letterSpacing: '.08em' }}>{cd.exp ? 'overdue' : cd.urgent ? 'due soon' : 'in progress'}</span>
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: totalH >= 100 ? 14 : totalH >= 10 ? 18 : 22, fontWeight: 700, color: urg?.color, letterSpacing: '-1px', lineHeight: 1, fontFamily: 'DM Mono, monospace' }}>{cd.exp && <span style={{ fontSize: 15, opacity: .7 }}>+</span>}{timeStr}</div>
-          <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: urg?.color, opacity: .6, marginTop: 2, textAlign: 'right' }}>{cd.exp ? 'overdue' : 'left'}</div>
+          <div style={{ fontSize: totalH >= 100 ? 14 : totalH >= 10 ? 18 : 22, fontWeight: 700, color: urg?.color, letterSpacing: '-1px', lineHeight: 1, fontFamily: 'var(--font-mono), monospace' }}>{cd.exp && <span style={{ fontSize: 15, opacity: .7 }}>+</span>}{timeStr}</div>
+          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: urg?.color, opacity: .6, marginTop: 2, textAlign: 'right' }}>{cd.exp ? 'overdue' : 'left'}</div>
         </div>
       </div>
       <div style={{ height: 2, background: `${urg?.color}1A`, borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
@@ -159,7 +159,7 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
       <div style={{ padding: '13px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-            {task.category && <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', background: 'var(--bg3)', padding: '2px 6px', borderRadius: 4, color: 'var(--t3)' }}>{task.category}</span>}
+            {task.category && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', padding: '2px 6px', borderRadius: 4, color: 'var(--t3)' }}>{task.category}</span>}
             <PDot priority={task.priority} />
             {hasOut && <span className="pill" style={{ background: 'var(--green)', color: 'var(--bg0)', marginLeft: 'auto' }}>↑ Output</span>}
           </div>
@@ -169,13 +169,13 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
         {task.refLink && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 8px', background: 'var(--bg1)', borderRadius: 6 }}>
             <span style={{ fontSize: 12, color: 'var(--t4)' }}>↗</span>
-            <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.refLink.replace('https://', '')}</span>
+            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.refLink.replace('https://', '')}</span>
           </div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 7, borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
           <SPill status={task.status} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {(task.comments?.length || 0) > 0 && <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)' }}>{task.comments?.length}💬</span>}
+            {(task.comments?.length || 0) > 0 && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>{task.comments?.length}💬</span>}
           </div>
         </div>
       </div>

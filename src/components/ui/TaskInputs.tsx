@@ -48,7 +48,7 @@ export const DLPick = ({ value, onChange }: { value: string | null; onChange: (v
               border: `1px solid ${(active(p) || (p.h === null && custom)) ? 'var(--accent)' : 'var(--border)'}`, 
               background: (active(p) || (p.h === null && custom)) ? 'var(--accent-dim)' : 'var(--bg2)', 
               color: (active(p) || (p.h === null && custom)) ? 'var(--accent)' : 'var(--t3)', 
-              fontSize: 13, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, cursor: 'pointer', transition: 'all .11s' 
+              fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, cursor: 'pointer', transition: 'all .11s' 
             }}
           >
             {p.l}
@@ -64,7 +64,7 @@ export const DLPick = ({ value, onChange }: { value: string | null; onChange: (v
         />
       )}
       {value && !custom && (
-        <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t3)', marginTop: 4 }}>
+        <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', marginTop: 4 }}>
           → {formattedDate}
         </div>
       )}
@@ -105,7 +105,7 @@ export const AiBrief = ({ title, category, onApply }: { title: string; category?
             border: `1px solid ${title.trim() ? 'var(--accent)' : 'var(--border)'}`, 
             background: title.trim() ? 'var(--accent-dim)' : 'var(--bg3)', 
             color: title.trim() ? 'var(--accent)' : 'var(--t4)', 
-            fontSize: 13, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, 
+            fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, 
             cursor: title.trim() ? 'pointer' : 'not-allowed', 
             display: 'flex', alignItems: 'center', gap: 5, transition: 'all .12s' 
           }}
@@ -120,7 +120,7 @@ export const AiBrief = ({ title, category, onApply }: { title: string; category?
             style={{ 
               padding: '6px 12px', borderRadius: 8, border: '1px solid var(--green)44', 
               background: 'var(--green-bg)', color: 'var(--green)', fontSize: 13, 
-              fontFamily: 'DM Sans, sans-serif', fontWeight: 500, cursor: 'pointer' 
+              fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, cursor: 'pointer' 
             }}
           >
             Use ↗

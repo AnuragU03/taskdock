@@ -34,15 +34,15 @@ export const CDSmall = ({ task }: { task: { dueAt: Date | string | null; status:
   const cd = useCD(task.dueAt);
   const done = ['completed', 'cancelled'].includes(task.status);
   
-  if (done) return <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--green)' }}>✓ done</span>;
-  if (!task.dueAt) return <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)' }}>No deadline</span>;
+  if (done) return <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)' }}>✓ done</span>;
+  if (!task.dueAt) return <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>No deadline</span>;
 
   const str = cd.d > 0 ? `${cd.d}d ${cd.h}h` : cd.h > 0 ? `${cd.h}h ${cd.m}m` : `${cd.m}m ${cd.s}s`;
   
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
       <span className="ld" style={{ background: cd.color }} />
-      <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: cd.color, fontWeight: 500 }}>
+      <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: cd.color, fontWeight: 500 }}>
         {cd.exp ? `${str} over` : str}
       </span>
     </div>
@@ -56,7 +56,7 @@ export const CDBig = ({ task }: { task: { dueAt: Date | string | null; status: s
   if (done) return (
     <div style={{ padding: '10px 14px', background: 'var(--green-bg)', border: '1px solid var(--green)33', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
       <span style={{ fontSize: 18, color: 'var(--green)' }}>✓</span>
-      <span style={{ fontSize: 12, color: 'var(--green)', fontFamily: 'DM Mono, monospace' }}>Task completed</span>
+      <span style={{ fontSize: 12, color: 'var(--green)', fontFamily: 'var(--font-mono), monospace' }}>Task completed</span>
     </div>
   );
   if (!task.dueAt) return (
@@ -73,17 +73,17 @@ export const CDBig = ({ task }: { task: { dueAt: Date | string | null; status: s
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span className="ld" style={{ background: cd.color }} />
-          <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: cd.color, textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 500 }}>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: cd.color, textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 500 }}>
             {cd.exp ? 'Overdue by' : cd.urgent ? 'Due very soon' : 'Time remaining'}
           </span>
         </div>
-        <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: cd.color, opacity: 0.7 }}>{formattedDate}</span>
+        <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: cd.color, opacity: 0.7 }}>{formattedDate}</span>
       </div>
       <div style={{ display: 'flex', gap: 14, marginBottom: 8 }}>
         {nums.map(({ v, l }) => (
           <div key={l} style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, fontSize: 20, color: cd.color, lineHeight: 1, letterSpacing: '-1px' }}>{v}</div>
-            <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: cd.color, opacity: 0.6, marginTop: 2 }}>{l}</div>
+            <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 20, color: cd.color, lineHeight: 1, letterSpacing: '-1px' }}>{v}</div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: cd.color, opacity: 0.6, marginTop: 2 }}>{l}</div>
           </div>
         ))}
       </div>

@@ -52,8 +52,8 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
       {/* Left side: Live Preview */}
       <div style={{ width: 340, flexShrink: 0, background: 'var(--bg1)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', fontSize: 14, fontFamily: 'DM Sans, sans-serif' }}>← Cancel</button>
-          <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)' }}>Card preview</span>
+          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif' }}>← Cancel</button>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>Card preview</span>
         </div>
         <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="card" style={{ overflow: 'hidden', cursor: 'default', pointerEvents: 'none' }}>
@@ -62,18 +62,18 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
             </div>
             <div style={{ padding: '11px 13px' }}>
               <div style={{ display: 'flex', gap: 5, marginBottom: 5, alignItems: 'center' }}>
-                {f.category && <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', background: 'var(--bg3)', padding: '2px 5px', borderRadius: 3, color: 'var(--t4)' }}>{f.category}</span>}
+                {f.category && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', padding: '2px 5px', borderRadius: 3, color: 'var(--t4)' }}>{f.category}</span>}
                 <PDot priority={f.priority} />
               </div>
-              <h3 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 16, fontWeight: 600, color: f.title ? 'var(--t1)' : 'var(--t4)', letterSpacing: '-.2px', lineHeight: 1.45 }}>{f.title || 'Task title…'}</h3>
+              <h3 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 16, fontWeight: 600, color: f.title ? 'var(--t1)' : 'var(--t4)', letterSpacing: '-.2px', lineHeight: 1.45 }}>{f.title || 'Task title…'}</h3>
               <p style={{ fontSize: 12, color: 'var(--t4)', lineHeight: 1.55, marginTop: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{f.desc || 'Brief…'}</p>
-              {f.refLink && <div style={{ marginTop: 6, padding: '4px 7px', background: 'var(--bg1)', borderRadius: 5, fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>↗ {f.refLink.replace('https://', '')}</div>}
-              {f.dueAt && <div style={{ marginTop: 6, padding: '4px 7px', background: 'var(--green-bg)', borderRadius: 5, fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--green)' }}>⏱ {formattedDueAt}</div>}
+              {f.refLink && <div style={{ marginTop: 6, padding: '4px 7px', background: 'var(--bg1)', borderRadius: 5, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>↗ {f.refLink.replace('https://', '')}</div>}
+              {f.dueAt && <div style={{ marginTop: 6, padding: '4px 7px', background: 'var(--green-bg)', borderRadius: 5, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)' }}>⏱ {formattedDueAt}</div>}
             </div>
           </div>
           {isAdmin && (
             <div style={{ background: 'var(--purple-bg)', border: '1px solid var(--purple)33', borderRadius: 12, padding: '10px 12px' }}>
-              <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--purple)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 4 }}>★ Admin task</div>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--purple)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 4 }}>★ Admin task</div>
               <p style={{ fontSize: 13, color: ' var(--purple)', lineHeight: 1.75, opacity: 0.8 }}>Admin tasks auto-route to Under Review status.</p>
             </div>
           )}
@@ -82,7 +82,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
       
       {/* Right side: Form Inputs */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 36px', maxWidth: 640 }}>
-        <h1 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', marginBottom: 22 }}>Create a task</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', marginBottom: 22 }}>Create a task</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div><Lbl c="Title *"/><input className="inp" value={f.title} onChange={e => set('title', e.target.value)} placeholder="What needs to be created?"/></div>
           <div>

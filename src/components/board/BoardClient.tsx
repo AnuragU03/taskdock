@@ -38,8 +38,8 @@ export default function BoardClient({ initialTasks, user, allUsers }: { initialT
       <StatsBar tasks={tasks} userRole={user.role} />
       
       <div style={{ padding: '16px 24px 12px', background: 'var(--bg1)', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px' }}>Creative Board</h1>
-        <span style={{ fontSize: 12, color: 'var(--t4)', fontFamily: 'DM Mono, monospace' }}>{tasks.length} tasks</span>
+        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px' }}>Creative Board</h1>
+        <span style={{ fontSize: 12, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>{tasks.length} tasks</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)', fontSize: 15 }}>⌕</span>

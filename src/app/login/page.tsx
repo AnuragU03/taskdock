@@ -9,12 +9,12 @@ export default function LoginPage() {
       <div style={{ width: 420, flexShrink: 0, background: 'var(--bg1)', display: 'flex', flexDirection: 'column', padding: '44px 48px', justifyContent: 'space-between', borderRight: '1px solid var(--border)' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 52 }}>
-            <div style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif', fontWeight: 700, fontSize: 20, color: '#fff' }}>T</div>
-            <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-.2px' }}>TaskDock</span>
-            <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t4)', letterSpacing: '.12em', textTransform: 'uppercase', marginLeft: 2 }}>Creative OS</span>
+            <div style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 20, color: '#fff' }}>T</div>
+            <span style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-.2px' }}>TaskDock</span>
+            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', letterSpacing: '.12em', textTransform: 'uppercase', marginLeft: 2 }}>Creative OS</span>
           </div>
-          <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, color: 'var(--t4)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 16 }}>Built for creative teams</p>
-          <h1 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 48, fontWeight: 700, color: 'var(--t1)', lineHeight: 0.9, letterSpacing: '-1px', marginBottom: 20 }}>
+          <p style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 13, color: 'var(--t4)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 16 }}>Built for creative teams</p>
+          <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 48, fontWeight: 700, color: 'var(--t1)', lineHeight: 0.9, letterSpacing: '-1px', marginBottom: 20 }}>
             Brief in.<br />Work done.<br />
             <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>Output out.</span>
           </h1>
@@ -29,8 +29,8 @@ export default function LoginPage() {
             ['⏱', 'live countdowns']
           ].map(([n, l]) => (
             <div key={l}>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', lineHeight: 1 }}>{n}</div>
-              <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, color: 'var(--t4)', marginTop: 3 }}>{l}</div>
+              <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', lineHeight: 1 }}>{n}</div>
+              <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 13, color: 'var(--t4)', marginTop: 3 }}>{l}</div>
             </div>
           ))}
         </div>
@@ -38,7 +38,7 @@ export default function LoginPage() {
       
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
         <div style={{ width: '100%', maxWidth: 340 }}>
-          <h2 style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', marginBottom: 5 }}>Sign In</h2>
+          <h2 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', marginBottom: 5 }}>Sign In</h2>
           <p style={{ color: 'var(--t3)', fontSize: 14, marginBottom: 32 }}>Access your workspace and tasks.</p>
           
           <button 

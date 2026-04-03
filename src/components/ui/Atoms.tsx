@@ -30,7 +30,7 @@ export const SPill = ({ status }: { status: string }) => {
 export const PDot = ({ priority }: { priority: string }) => {
   const c = PC[priority.toLowerCase()] || PC.low;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: c.c, fontFamily: 'DM Mono, monospace', fontWeight: 500, whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: c.c, fontFamily: 'var(--font-mono), monospace', fontWeight: 500, whiteSpace: 'nowrap' }}>
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: c.c, display: 'inline-block' }}></span>
       {c.l}
     </span>
@@ -46,7 +46,7 @@ export const Tog = ({ on, onChange }: { on: boolean; onChange: () => void }) => 
 export const Toast = ({ msg }: { msg: string | null }) => {
   if (!msg) return null;
   return (
-    <div style={{ position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#fff', padding: '12px 22px', borderRadius: 120, fontSize: 13, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, zIndex: 9999, boxShadow: '0 6px 24px rgba(0,0,0,.4)', whiteSpace: 'nowrap' }} className="fu">
+    <div style={{ position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#fff', padding: '12px 22px', borderRadius: 120, fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, zIndex: 9999, boxShadow: '0 6px 24px rgba(0,0,0,.4)', whiteSpace: 'nowrap' }} className="fu">
       {msg}
     </div>
   );
@@ -54,7 +54,7 @@ export const Toast = ({ msg }: { msg: string | null }) => {
 
 export const Lbl = ({ c, sub }: { c: string; sub?: string }) => (
   <div style={{ marginBottom: 5 }}>
-    <div style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{c}</div>
+    <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{c}</div>
     {sub && <div style={{ fontSize: 12, color: 'var(--t4)', marginTop: 1 }}>{sub}</div>}
   </div>
 );
