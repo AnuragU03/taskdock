@@ -69,11 +69,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B374DFB3F20644B797FB0689A2A441E2 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E604146EAEC04E6F914F0F45189FE092 }}
 
-      - name: Set Azure startup command
-        run: |
-          az webapp config set --name taskdock --resource-group taskdock_group \
-            --startup-file "node node_modules/prisma/build/index.js db push --accept-data-loss && node server.js"
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
