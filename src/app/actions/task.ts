@@ -11,7 +11,9 @@ export async function createTask(formData: any) {
 
   const { title, desc, type, priority, category, dueAt, assignedTo, refLink } = formData;
   const isAdmin = (session.user as any).role === 'admin';
-  const status = isAdmin ? 'under_review' : type === 'assigned' ? 'assigned' : 'open';
+  // No assignee = open queue, with assignee = assigned (admin tasks go to under_review)
+  const hasAssignee = !!assignedTo;
+  const status = hasAssignee ? (isAdmin ? 'under_review' : 'assigned') : 'open';
 
   let workspace = await prisma.workspace.findFirst();
   if (!workspace) {
@@ -24,8 +26,8 @@ export async function createTask(formData: any) {
     { id: `ea${Date.now()}`, type: 'TASK_CREATED', label: `Task created${isAdmin ? ' (Admin review)' : ''}`, by: (session.user as any).id, at: new Date().toISOString() },
     { 
       id: `eb${Date.now()}`,
-      type: isAdmin ? 'TASK_REVIEW_CREATED' : type === 'assigned' ? 'TASK_ASSIGNED' : 'TASK_OPENED',
-      label: isAdmin ? 'Opened for admin review' : type === 'assigned' ? 'Assigned to user' : 'Published to open queue',
+      type: hasAssignee ? 'TASK_ASSIGNED' : 'TASK_OPENED',
+      label: hasAssignee ? 'Assigned to user' : 'Published to open queue',
       by: (session.user as any).id,
       at: new Date().toISOString()
     }
@@ -42,7 +44,7 @@ export async function createTask(formData: any) {
       dueAt: dueAt ? new Date(dueAt) : null,
       refLink,
       type: type || 'assigned',
-      assignedToId: type === 'assigned' && assignedTo ? assignedTo : null,
+      assignedToId: hasAssignee ? assignedTo : null,
       createdById: (session.user as any).id,
       events: JSON.stringify(eventsList),
       comments: JSON.stringify([])
@@ -96,7 +98,8 @@ export async function pickupTask(taskId: string) {
   });
 
   revalidatePath('/');
-  revalidatePath(`/open-queue`);
+  revalidatePath('/open-queue');
+  revalidatePath(`/task/${taskId}`);
   return task;
 }
 

@@ -9,7 +9,10 @@ export default async function OpenQueuePage() {
   if (!session?.user) redirect('/login');
 
   const tasks = await prisma.task.findMany({
-    where: { type: 'open', status: 'open' },
+    where: {
+      assignedToId: null,
+      status: { notIn: ['completed', 'cancelled'] }
+    },
     include: {
       assignee: { select: { id: true, name: true, image: true, color: true, initials: true } }
     },

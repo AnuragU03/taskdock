@@ -79,7 +79,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
   const isMgr = ['manager', 'admin'].includes(user.role?.toLowerCase());
   const isEmp = !isMgr;
   const isMe = task.assignedToId === user.id;
-  const isOpen = task.type === 'open' && task.status === 'open';
+  const isUnassigned = !task.assignedToId && !['completed', 'cancelled'].includes(task.status);
   const hasOut = task.subText || task.subLink;
   
   const safeParse = (s: string | null) => { try { return s ? JSON.parse(s) : []; } catch { return []; } };
@@ -100,7 +100,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           <CardHeader task={task} />
           <div style={{ padding: '8px 16px', display: 'flex', gap: 5, flexWrap: 'wrap', borderBottom: '1px solid var(--border)' }}>
             <SPill status={task.status} />
-            {task.type === 'open' && <span className="pill" style={{ background: 'var(--blue)', color: '#fff' }}>◈ Open</span>}
+            {isUnassigned && <span className="pill" style={{ background: 'var(--blue)', color: '#fff' }}>◈ Open Queue</span>}
           </div>
         </div>
         
@@ -194,9 +194,9 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           </div>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 18 }}>
-            {isEmp && isOpen && !isMe && <button onClick={() => handleAction('pickup')} className="bp">◈ Pick Up & Start</button>}
-            {isEmp && isMe && task.status === 'assigned' && <button onClick={() => handleAction('accept')} className="bp">▶ Accept & Start</button>}
-            {isEmp && isMe && task.status === 'in_progress' && !showSub && <button onClick={() => setShowSub(true)} className="bp">↑ Submit Work</button>}
+            {isUnassigned && <button onClick={() => handleAction('pickup')} className="bp">◈ Pick Up & Start</button>}
+            {isMe && task.status === 'assigned' && <button onClick={() => handleAction('accept')} className="bp">▶ Accept & Start</button>}
+            {isMe && task.status === 'in_progress' && !showSub && <button onClick={() => setShowSub(true)} className="bp">↑ Submit Work</button>}
             {user.role?.toLowerCase() === 'admin' && task.status === 'submitted' && <button onClick={() => setShowRev(true)} className="bp">★ Approve / Review</button>}
             {user.role?.toLowerCase() === 'admin' && task.status === 'under_review' && <button onClick={() => setShowRev(true)} className="bp">★ Complete Review</button>}
             {user.role?.toLowerCase() === 'admin' && ['completed', 'rejected', 'reopened'].includes(task.status) && <button onClick={() => handleAction('reopen')} className="bg">↺ Reopen</button>}
