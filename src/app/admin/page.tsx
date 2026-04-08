@@ -11,8 +11,11 @@ export default async function AdminPage() {
   }
 
   const members = await prisma.user.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: { profile: true }
   });
 
-  return <AdminClient members={members} />;
+  const workspace = await prisma.workspace.findFirst();
+
+  return <AdminClient members={members} workspace={workspace} />;
 }

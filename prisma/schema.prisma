@@ -52,6 +52,8 @@ model User {
   tasksAssigned    Task[]  @relation("AssignedTasks")
   tasksCreated     Task[]  @relation("CreatedTasks")
   notifications    Notification[]
+  attendance       Attendance[]
+  profile          EmployeeProfile?
 }
 
 model VerificationToken {
@@ -66,6 +68,7 @@ model Workspace {
   name             String
   slug             String   @unique
   subscriptionPlan String   @default("Free")
+  defaultWorkHours Float    @default(8)
   createdAt        DateTime @default(now())
 
   members          WorkspaceMember[]
@@ -98,12 +101,15 @@ model Task {
   category     String?
   priority     String   @default("medium")
   type         String   @default("assigned")
+  weight       Int      @default(5)      // 1-10 complexity/importance for productivity
   dueAt        DateTime?
   refLink      String?
   subText      String?
   subLink      String?
   fbText       String?
   adminScore   Int?     // Score given by admin out of 5
+  pickedUpAt   DateTime?  // when employee starts working
+  completedAt  DateTime?  // when admin approves/rejects
   events       String?  // Stored as JSON string due to SQLite constraints
   comments     String?  // Stored as JSON string
   createdAt    DateTime @default(now())
@@ -132,4 +138,33 @@ model Notification {
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id          String    @id @default(cuid())
+  userId      String
+  date        String    // "2026-04-08" — one record per user per day
+  clockIn     DateTime?
+  clockOut    DateTime?
+  status      String    @default("present") // present | halfday | leave | wfh
+  hoursWorked Float?
+  adminNote   String?
+  createdAt   DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, date])
+}
+
+model EmployeeProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  designation     String?
+  department      String?
+  monthlySalary   Float?
+  workingHoursDay Float    @default(8)
+  roleDesc        String?
+  customFields    String?  // JSON for extensible fields
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

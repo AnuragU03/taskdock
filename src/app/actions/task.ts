@@ -91,6 +91,7 @@ export async function pickupTask(taskId: string) {
     data: {
       status: 'in_progress',
       assignedToId: (session.user as any).id,
+      pickedUpAt: new Date(),
       events: JSON.stringify([
         ...existingEvents,
         { id: `ep${Date.now()}`, type: 'TASK_PICKED_UP', label: `Picked up by ${session.user.name}`, by: (session.user as any).id, at: new Date().toISOString() }
@@ -141,6 +142,7 @@ export async function reviewTask(taskId: string, approved: boolean, fbText: stri
     status: approved ? 'completed' : 'rejected',
     fbText,
     adminScore: score,
+    completedAt: new Date(),
     events: JSON.stringify([
       ...existingEvents,
       { id: `er${Date.now()}`, type: approved ? 'TASK_APPROVED' : 'TASK_REJECTED', label: approved ? `Approved by ${session.user.name} (Score: ${score}/5)` : `Rejected by ${session.user.name} (Score: ${score}/5)`, by: (session.user as any).id, at: new Date().toISOString() }
