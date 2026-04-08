@@ -19,7 +19,7 @@ interface SidebarProps {
   };
   unreadNotifsCount: number;
   todayAttendance?: any;
-  earnings?: { earned: number; total: number } | null;
+  earnings?: { earned: number; total: number; multiplier?: number } | null;
 }
 
 export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: SidebarProps) => {
@@ -54,7 +54,10 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
-    ...( userRole === 'admin' ? [{ id: '/admin', l: 'Settings', ic: '⬡' }] : [])
+    ...( userRole === 'admin' ? [
+      { id: '/import', l: 'Bulk Import', ic: '⇪' },
+      { id: '/admin', l: 'Settings', ic: '⬡' }
+    ] : [])
   ];
 
   return (
@@ -132,7 +135,14 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       {/* EARNINGS PROGRESS BAR */}
       {earnings && earnings.total > 0 && (
         <div style={{ margin: '0 7px 4px', padding: '10px 12px', background: 'linear-gradient(135deg,#0D1A24,#0A1420)', border: '1px solid var(--blue)44', borderRadius: 12 }}>
-          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 6 }}>This month</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '.1em' }}>This month</div>
+            {earnings.multiplier && earnings.multiplier !== 1 && (
+              <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: earnings.multiplier > 1 ? 'var(--green)' : 'var(--red)', background: earnings.multiplier > 1 ? 'var(--green-bg)' : 'var(--red-bg)', padding: '2px 5px', borderRadius: 4 }}>
+                {earnings.multiplier}x Prod.
+              </div>
+            )}
+          </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
             <span style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 18, color: 'var(--blue)', lineHeight: 1 }}>₹{earnings.earned.toLocaleString('en-IN')}</span>
             <span style={{ fontSize: 13, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>of ₹{earnings.total.toLocaleString('en-IN')}</span>

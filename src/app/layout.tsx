@@ -56,13 +56,32 @@ export default async function RootLayout({
         const day = new Date(year, month - 1, d).getDay();
         if (day !== 0 && day !== 6) workingDays++;
       }
+      // Active Math Constraints: Base rate factor is Attendance (Days), but the value is multiplied by Productivity.
+      const tasksThisMonth = await prisma.task.findMany({
+        where: {
+          assignedToId: userId,
+          status: 'completed',
+          productivity: { not: null },
+          completedAt: { gte: new Date(startDate), lte: new Date(endDate + 'T23:59:59Z') }
+        },
+        select: { productivity: true }
+      });
+
+      let prodMultiplier = 1.0;
+      if (tasksThisMonth.length > 0) {
+        const sum = tasksThisMonth.reduce((acc, t) => acc + (t.productivity || 0), 0);
+        const avg = sum / tasksThisMonth.length;
+        // Clamp multiplier between 0.7x (Safety) and 1.5x (Ceiling)
+        prodMultiplier = Math.min(Math.max(avg / 5, 0.7), 1.5);
+      }
+
       const dailyRate = profile.monthlySalary / workingDays;
       let earned = 0;
       for (const r of records) {
-        if (r.status === 'present' || r.status === 'wfh') earned += dailyRate;
-        else if (r.status === 'halfday') earned += dailyRate * 0.5;
+        if (r.status === 'present' || r.status === 'wfh') earned += dailyRate * prodMultiplier;
+        else if (r.status === 'halfday') earned += (dailyRate * 0.5) * prodMultiplier;
       }
-      earnings = { earned: Math.round(earned), total: Math.round(profile.monthlySalary) };
+      earnings = { earned: Math.round(earned), total: Math.round(profile.monthlySalary), multiplier: Number(prodMultiplier.toFixed(2)) };
     }
   }
 
@@ -74,7 +93,7 @@ export default async function RootLayout({
             <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg0)' }}>
               <Sidebar 
                  user={{
-                   id: session.user.id as string,
+                   id: (session.user as any).id as string,
                    name: session.user.name as string,
                    email: session.user.email as string,
                    role: (session.user as any).role || 'employee',

@@ -233,11 +233,54 @@ export async function generateBrief(title: string, category?: string) {
 
 🎨 **Style/Direction:** Follow our established brand guidelines. Keep the tone professional yet approachable.
 
-📋 **Required Deliverables:**
-- Final source files (Figma, AfterEffects, etc).
-- Exported production-ready assets.
+📋 **Key Deliverables:**
+- Initial concept / draft
+- Refined version based on feedback
+- Final high-resolution assets
 
-⚠️ **Constraints:** Please ensure the file sizes are optimized for web and try to stick directly to the provided timeline.`;
-
+⏱ **Constraints:** Please stick to the agreed timeline. Flag any blockers early.`;
+  
   return category ? `[Category: ${category}]\n\n${brief}` : brief;
+}
+
+export async function bulkCreateTasks(tasks: any[]) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user || !(session.user as any).id) throw new Error("Unauthorized");
+  const userId = (session.user as any).id;
+  const isAdmin = (session.user as any).role === 'admin';
+
+  let workspace = await prisma.workspace.findFirst();
+  if (!workspace) {
+    workspace = await prisma.workspace.create({ data: { name: 'Main Workspace', slug: 'main' } });
+  }
+
+  const tasksToCreate = tasks.map(t => {
+    const hasAssignee = !!t.assignedTo;
+    const status = hasAssignee ? (isAdmin ? 'under_review' : 'assigned') : 'open';
+    const eventsList = [
+      { id: `ea${Date.now()}`, type: 'TASK_CREATED', label: `Task created (Bulk)`, by: userId, at: new Date().toISOString() }
+    ];
+
+    return {
+      workspaceId: workspace.id,
+      title: t.title || 'Untitled Batch Task',
+      desc: t.desc || '',
+      weight: t.weight ? Number(t.weight) : 5,
+      status,
+      category: t.category || 'General',
+      priority: t.priority || 'medium',
+      type: hasAssignee ? 'assigned' : 'open',
+      assignedToId: t.assignedTo || null,
+      dueAt: t.dueAt ? new Date(t.dueAt) : null,
+      refLink: t.refLink || null,
+      createdById: userId,
+      events: JSON.stringify(eventsList)
+    };
+  });
+
+  await prisma.task.createMany({ data: tasksToCreate });
+
+  revalidatePath('/');
+  revalidatePath('/open-queue');
+  return { success: true, count: tasks.length };
 }
