@@ -56,7 +56,7 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
     ...( userRole === 'admin' ? [
       { id: '/import', l: 'Bulk Import', ic: '⇪' },
-      { id: '/admin', l: 'Settings', ic: '⬡' }
+      { id: '/admin', l: 'Admin Dashboard', ic: '⬡' }
     ] : [])
   ];
 
