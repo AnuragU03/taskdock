@@ -191,14 +191,16 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
             <p style={{ fontSize: 14, color: 'var(--t2)', lineHeight: 1.9, fontWeight: 300 }}>{task.desc}</p>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginBottom: 18 }}>
             {[
               { l: 'Created by', v: <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}><Av user={task.createdBy} sz={40} /><span style={{ fontSize: 15, color: 'var(--t1)' }}>{task.createdBy?.name}</span></div> },
               { l: 'Assigned to', v: task.assignee ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}><Av user={task.assignee} sz={40} /><span style={{ fontSize: 15, color: 'var(--t1)' }}>{task.assignee.name}</span></div> : <span style={{ fontSize: 13, color: 'var(--t4)', marginTop: 5, display: 'block' }}>—</span> },
-              { l: 'Category', v: <div style={{ marginTop: 5 }}>{task.category ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', padding: '2px 8px', borderRadius: 5, color: 'var(--t2)' }}>{task.category}</span> : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}</div> }
-            ].map(({ l, v }) => (
-              <div key={l} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 11, padding: '9px 11px' }}>
-                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{l}</div>{v}
+              { l: 'Category', v: <div style={{ marginTop: 5 }}>{task.category ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', padding: '2px 8px', borderRadius: 5, color: 'var(--t2)' }}>{task.category}</span> : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}</div> },
+              task.productivity ? { l: 'Productivity Score', v: <div style={{ marginTop: 2, display: 'flex', alignItems: 'baseline', gap: 4 }}><span style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 22, color: 'var(--green)' }}>{task.productivity}</span><span style={{ fontSize: 10, color: 'var(--t4)' }}>pts/hr</span></div> } : null,
+              task.adminScore ? { l: 'Quality Rating', v: <div style={{ marginTop: 2, fontSize: 18, color: '#FCD34D' }}>{"★".repeat(task.adminScore)}{"☆".repeat(5 - task.adminScore)}</div> } : null
+            ].filter(Boolean).map((stat: any) => (
+              <div key={stat.l} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 11, padding: '9px 11px' }}>
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{stat.l}</div>{stat.v}
               </div>
             ))}
           </div>

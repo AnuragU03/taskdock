@@ -9,7 +9,7 @@ export async function createTask(formData: any) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user || !(session.user as any).id) throw new Error("Unauthorized");
 
-  const { title, desc, type, priority, category, dueAt, assignedTo, refLink } = formData;
+  const { title, desc, type, priority, category, dueAt, assignedTo, refLink, weight } = formData;
   const isAdmin = (session.user as any).role === 'admin';
   // No assignee = open queue, with assignee = assigned (admin tasks go to under_review)
   const hasAssignee = !!assignedTo;
@@ -38,6 +38,7 @@ export async function createTask(formData: any) {
       workspaceId: workspace.id,
       title,
       desc,
+      weight: weight ? Number(weight) : 5,
       status,
       category,
       priority: priority || 'medium',
@@ -138,11 +139,22 @@ export async function reviewTask(taskId: string, approved: boolean, fbText: stri
   const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
   const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
   
+  let productivity = null;
+  const completedAt = new Date();
+  
+  if (approved && taskObj?.pickedUpAt) {
+    let hours = (completedAt.getTime() - new Date(taskObj.pickedUpAt).getTime()) / (1000 * 60 * 60);
+    if (hours < 1) hours = 1; // Clamp to avoid infinity score
+    const w = taskObj?.weight || 5;
+    productivity = Number(((w * score) / hours).toFixed(2));
+  }
+
   const data: any = {
     status: approved ? 'completed' : 'rejected',
     fbText,
     adminScore: score,
-    completedAt: new Date(),
+    completedAt,
+    ...(productivity !== null && { productivity }),
     events: JSON.stringify([
       ...existingEvents,
       { id: `er${Date.now()}`, type: approved ? 'TASK_APPROVED' : 'TASK_REJECTED', label: approved ? `Approved by ${session.user.name} (Score: ${score}/5)` : `Rejected by ${session.user.name} (Score: ${score}/5)`, by: (session.user as any).id, at: new Date().toISOString() }

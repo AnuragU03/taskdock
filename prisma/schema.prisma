@@ -108,6 +108,7 @@ model Task {
   subLink      String?
   fbText       String?
   adminScore   Int?     // Score given by admin out of 5
+  productivity Float?   // Derived: (weight * score) / hours
   pickedUpAt   DateTime?  // when employee starts working
   completedAt  DateTime?  // when admin approves/rejects
   events       String?  // Stored as JSON string due to SQLite constraints

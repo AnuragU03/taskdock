@@ -9,7 +9,22 @@ export default async function LeaderboardPage() {
   if (!session?.user) redirect('/login');
 
   const members = await prisma.user.findMany({
-    orderBy: { browniePoints: 'desc' }
+    orderBy: { browniePoints: 'desc' },
+    include: {
+      tasksAssigned: {
+        where: { productivity: { not: null } },
+        select: { productivity: true }
+      }
+    }
+  });
+
+  const memsWithProd = members.map((m: any) => {
+    let avg = 0;
+    if (m.tasksAssigned?.length > 0) {
+      const sum = m.tasksAssigned.reduce((acc: number, t: any) => acc + (t.productivity || 0), 0);
+      avg = Number((sum / m.tasksAssigned.length).toFixed(1));
+    }
+    return { ...m, avgProductivity: avg };
   });
 
   return (
@@ -18,7 +33,7 @@ export default async function LeaderboardPage() {
       <p style={{ fontSize: 14, color: 'var(--t3)', marginBottom: 24 }}>Top contributors and creatives across the workspace.</p>
       
       <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        {members.map((m: any, i: number) => (
+        {memsWithProd.map((m: any, i: number) => (
           <div key={m.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: i < members.length - 1 ? '1px solid var(--border)' : 'none', background: i === 0 ? 'var(--accent)08' : 'transparent' }}>
             <div style={{ width: 44, fontSize: 18, fontFamily: 'var(--font-mono), monospace', fontWeight: 600, color: i === 0 ? '#FCD34D' : i === 1 ? '#94A3B8' : i === 2 ? '#B45309' : 'var(--t4)' }}>
               #{i + 1}
@@ -28,9 +43,15 @@ export default async function LeaderboardPage() {
               <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 16, color: 'var(--t1)' }}>{m.name}</div>
               <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2 }}>{m.role}</div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 24, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, color: 'var(--accent)', letterSpacing: '-1px' }}>{m.browniePoints}</div>
-              <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: -2 }}>Points</div>
+            <div style={{ textAlign: 'right', display: 'flex', gap: 24, alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 22, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, color: 'var(--green)', letterSpacing: '-1px' }}>{m.avgProductivity > 0 ? m.avgProductivity : '—'}</div>
+                <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: -2 }}>Avg Prod</div>
+              </div>
+              <div style={{ width: 60, textAlign: 'right' }}>
+                <div style={{ fontSize: 24, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, color: 'var(--accent)', letterSpacing: '-1px' }}>{m.browniePoints}</div>
+                <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: -2 }}>Points</div>
+              </div>
             </div>
           </div>
         ))}

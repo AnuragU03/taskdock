@@ -12,7 +12,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
   const router = useRouter();
   const isAdmin = user.role?.toLowerCase() === 'admin';
   const isEmployee = user.role?.toLowerCase() === 'employee' || !user.role;
-  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '' });
+  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '', weight: 5 });
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -120,6 +120,16 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
           <div>
             <Lbl c="Reference link"/>
             <input className="inp" value={f.refLink} onChange={e => set('refLink', e.target.value)} placeholder="Figma, Notion, Google Docs, Loom…"/>
+          </div>
+          <div>
+            <Lbl c={`Task Weight (Complexity/Importance): ${f.weight} / 10`} sub="Used in productivity math formula. Default is 5."/>
+            <input 
+               type="range" 
+               min="1" max="10" 
+               value={f.weight} 
+               onChange={e => set('weight', e.target.value as any)}
+               style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--accent)', marginTop: 8 }} 
+            />
           </div>
           <button 
             onClick={submit} 
