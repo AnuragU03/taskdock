@@ -3,6 +3,7 @@
 import React from 'react';
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export const Topbar = ({ user }: { user: any }) => {
   const pathname = usePathname();
@@ -28,17 +29,19 @@ export const Topbar = ({ user }: { user: any }) => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{user.name}</div>
-          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase' }}>{user.role}</div>
-        </div>
-        {user.image ? (
-          <img src={user.image} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} alt="Profile" />
-        ) : (
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: user.color || 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
-            {user.initials || (user.name || '?').charAt(0).toUpperCase()}
+        <Link href="/profile" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', cursor: 'pointer' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{user.name}</div>
+            <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase' }}>{user.role}</div>
           </div>
-        )}
+          {user.image ? (
+             <img src={user.image} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} alt="Profile" />
+          ) : (
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: user.color || 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
+              {user.initials || (user.name || '?').charAt(0).toUpperCase()}
+            </div>
+          )}
+        </Link>
         <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
         <button onClick={() => signOut({ callbackUrl: '/login' })} style={{ background: 'transparent', border: 'none', color: 'var(--t4)', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans), sans-serif', padding: '4px 8px', transition: 'color .1s' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--t4)'}>
           Log out

@@ -113,3 +113,14 @@ export async function adminOverrideAttendance(userId: string, date: string, stat
   revalidatePath('/admin');
   return record;
 }
+
+export async function getRecentAttendance(userId: string, limit = 30) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
+  return prisma.attendance.findMany({
+    where: { userId },
+    orderBy: { date: 'desc' },
+    take: limit
+  });
+}
+

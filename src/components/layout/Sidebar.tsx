@@ -56,7 +56,6 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
-    { id: '/profile', l: 'My Profile', ic: '◉' },
     ...( isAdmin ? [
       { id: '/import', l: 'Bulk Import', ic: '⇪' },
       { id: '/vault', l: 'Credential Locker', ic: '🔐' },

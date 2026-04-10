@@ -4,7 +4,56 @@ import React, { useState, useEffect } from 'react';
 import { Av, Toast } from '@/components/ui/Atoms';
 import { updateUserRole } from '@/app/actions/admin';
 import { upsertProfile, updateWorkspaceSettings } from '@/app/actions/profile';
-import { getAllTodayAttendance, adminOverrideAttendance } from '@/app/actions/attendance';
+import { getAllTodayAttendance, adminOverrideAttendance, getRecentAttendance } from '@/app/actions/attendance';
+
+function HistoryPanel({ userId }: { userId: string }) {
+  const [data, setData] = useState<any[]|null>(null);
+  useEffect(() => {
+    getRecentAttendance(userId).then(setData);
+  }, [userId]);
+  
+  if (!data) return <div style={{ padding: '16px 20px', background: 'var(--bg0)', borderBottom: '1px solid var(--border)', color: 'var(--t4)', fontSize: 13, fontFamily: 'var(--font-mono), monospace' }}>Loading history...</div>;
+
+  const present = data.filter(d => d.status === 'present').length;
+  const half = data.filter(d => d.status === 'halfday').length;
+  const wfh = data.filter(d => d.status === 'wfh').length;
+  const leave = data.filter(d => d.status === 'leave').length;
+
+  return (
+    <div style={{ background: 'var(--bg0)', padding: '20px 20px 24px 60px', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 16, overflowX: 'auto' }}>
+        <div style={{ padding: '8px 12px', background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 6, minWidth: 90 }}>
+          <div style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginBottom: 4 }}>PRESENT 30D</div>
+          <div style={{ fontSize: 18, color: 'var(--green)', fontWeight: 600, fontFamily: 'var(--font-mono), monospace' }}>{present}</div>
+        </div>
+        <div style={{ padding: '8px 12px', background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 6, minWidth: 90 }}>
+          <div style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginBottom: 4 }}>WFH</div>
+          <div style={{ fontSize: 18, color: 'var(--blue)', fontWeight: 600, fontFamily: 'var(--font-mono), monospace' }}>{wfh}</div>
+        </div>
+        <div style={{ padding: '8px 12px', background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 6, minWidth: 90 }}>
+          <div style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginBottom: 4 }}>HALF DAY</div>
+          <div style={{ fontSize: 18, color: '#FCD34D', fontWeight: 600, fontFamily: 'var(--font-mono), monospace' }}>{half}</div>
+        </div>
+        <div style={{ padding: '8px 12px', background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 6, minWidth: 90 }}>
+          <div style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginBottom: 4 }}>LEAVE</div>
+          <div style={{ fontSize: 18, color: 'var(--red)', fontWeight: 600, fontFamily: 'var(--font-mono), monospace' }}>{leave}</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+        {data.slice(0, 14).map(r => (
+          <div key={r.id} style={{ padding: '8px 12px', background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 6, opacity: r.status === 'leave' ? 0.6 : 1, minWidth: 90, flexShrink: 0 }}>
+            <div style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginBottom: 4 }}>{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: r.status === 'present' ? 'var(--green)' : r.status === 'halfday' ? '#FCD34D' : r.status === 'wfh' ? 'var(--blue)' : 'var(--red)' }}>
+              {r.status.toUpperCase()}
+            </div>
+            <div style={{ fontSize: 11, color: r.hoursWorked ? 'var(--t3)' : 'var(--t4)', marginTop: 4 }}>{r.hoursWorked ? `${r.hoursWorked}h` : '-'}</div>
+          </div>
+        ))}
+        {data.length === 0 && <div style={{ fontSize: 13, color: 'var(--t4)' }}>No recent attendance data.</div>}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminClient({ members, workspace }: { members: any[], workspace: any }) {
   const [toast, setToast] = useState<string | null>(null);
@@ -15,6 +64,7 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [historyId, setHistoryId] = useState<string | null>(null);
 
   // Settings states
   const [defaultHours, setDefaultHours] = useState(workspace?.defaultWorkHours || 8);
@@ -169,9 +219,14 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
            
            {members.map(u => {
               const record = attendanceRecords.find(r => r.userId === u.id);
+              const isExpanded = historyId === u.id;
               return (
-                <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+                <React.Fragment key={u.id}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr', alignItems: 'center', padding: '14px 20px', borderBottom: isExpanded ? 'none' : '1px solid var(--border)', background: isExpanded ? 'var(--bg2)' : 'transparent', transition: 'background .2s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <button onClick={() => setHistoryId(isExpanded ? null : u.id)} style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isExpanded ? 'var(--bg3)' : 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '50%', cursor: 'pointer', color: 'var(--t3)', transition: 'all .2s' }}>
+                      {isExpanded ? '▼' : '▶'}
+                    </button>
                     <Av user={u} sz={40} />
                     <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 15, color: 'var(--t1)' }}>{u.name}</div>
                   </div>
@@ -204,6 +259,8 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
                     </select>
                   </div>
                 </div>
+                {isExpanded && <HistoryPanel userId={u.id} />}
+                </React.Fragment>
               );
            })}
         </div>
