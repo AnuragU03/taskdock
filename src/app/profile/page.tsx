@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getBlobSasUrl } from "@/lib/blob";
 import ProfileClient from "./ProfileClient";
 
 export default async function ProfilePage() {
@@ -21,6 +22,14 @@ export default async function ProfilePage() {
     }
   });
 
+  const docsWithUrls = await Promise.all(
+    (user?.documents || []).map(async (doc) => ({
+      ...doc,
+      secureUrl: await getBlobSasUrl(doc.blobPath)
+    }))
+  );
+
+
   // Calculate stats
   const tasks = user?.tasksAssigned || [];
   let avgProd = 0;
@@ -38,7 +47,7 @@ export default async function ProfilePage() {
         role: user?.role || 'employee',
         browniePoints: user?.browniePoints || 0,
         profile: user?.profile,
-        documents: user?.documents || [],
+        documents: docsWithUrls,
         avgProductivity: avgProd,
         completedTasks: tasks.length
       }}

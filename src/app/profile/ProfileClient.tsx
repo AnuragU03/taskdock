@@ -94,7 +94,7 @@ export default function ProfileClient({ user }: { user: any }) {
                     <span style={{ fontSize: 13, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{doc.fileName}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <a href={doc.blobUrl} target="_blank" rel="noopener" style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--blue)', background: 'var(--bg3)', borderRadius: 6, textDecoration: 'none' }}>View ↗</a>
+                    <a href={doc.secureUrl || doc.blobUrl} target="_blank" rel="noopener" style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--blue)', background: 'var(--bg3)', borderRadius: 6, textDecoration: 'none' }}>View ↗</a>
                     <button onClick={() => handleDelete(doc.id)} style={{ padding: '6px 10px', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--red)', background: 'var(--red-bg)', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Delete</button>
                   </div>
                   <div style={{ position: 'absolute', top: 12, right: 12 }}>
