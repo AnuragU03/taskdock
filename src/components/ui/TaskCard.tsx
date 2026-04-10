@@ -141,7 +141,7 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
   const hasOut = task.subText || task.subLink;
   
   if (compact) return (
-    <div className="card fu" onClick={onClick} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
+    <div className="card fu" onClick={onClick} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', flex: 1, width: '100%' }}>
       <CardHeader task={task} />
       <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
         <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--t1)', lineHeight: 1.45 }}>{task.title}</div>
@@ -154,7 +154,7 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
   );
 
   return (
-    <div className="card fu" onClick={onClick} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
+    <div className="card fu" onClick={onClick} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', flex: 1, width: '100%' }}>
       <CardHeader task={task} />
       <div style={{ padding: '13px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div>

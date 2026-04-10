@@ -12,11 +12,45 @@ export default function BoardClient({ initialTasks, user, allUsers }: { initialT
   const [q, setQ] = useState('');
   const router = useRouter();
 
+  const [prevLength, setPrevLength] = useState(initialTasks.length);
+  const [prevCompleted, setPrevCompleted] = useState(initialTasks.filter(t => t.status === 'completed').length);
+
+  React.useEffect(() => {
+    const playChime = (high: boolean) => {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(high ? 600 : 400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(high ? 1200 : 800, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.start(); osc.stop(ctx.currentTime + 0.15);
+      } catch (e) {}
+    };
+
+    const currCompleted = initialTasks.filter(t => t.status === 'completed').length;
+    if (initialTasks.length > prevLength) playChime(false);
+    else if (currCompleted > prevCompleted) playChime(true);
+    
+    setPrevLength(initialTasks.length);
+    setPrevCompleted(currCompleted);
+  }, [initialTasks, prevLength, prevCompleted]);
+
   const tasks = useMemo(() => {
     let t = [...initialTasks].sort((a, b) => {
-      // Sort by dueAt (earliest first), put nulls at the end
-      if (!a.dueAt) return 1;
-      if (!b.dueAt) return -1;
+      // 1. Uncompleted tasks stuck to the top
+      const aDone = ['completed', 'rejected'].includes(a.status);
+      const bDone = ['completed', 'rejected'].includes(b.status);
+      if (aDone && !bDone) return 1;
+      if (!aDone && bDone) return -1;
+
+      // 2. Sort by dueAt (earliest first), put nulls at the end
+      if (!a.dueAt && b.dueAt) return 1;
+      if (a.dueAt && !b.dueAt) return -1;
+      if (!a.dueAt && !b.dueAt) return 0;
       return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
     });
 

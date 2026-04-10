@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 export async function updateUserRole(userId: string, role: string) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
-  if ((session.user as any).role !== 'admin') throw new Error("Requires admin role");
+  if (!['admin','superadmin'].includes((session.user as any).role)) throw new Error("Requires admin role");
 
   await prisma.user.update({
     where: { id: userId },

@@ -211,9 +211,9 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
             {isMe && task.status === 'in_progress' && !showSub && <button onClick={() => setShowSub(true)} className="bp">↑ Submit Work</button>}
             {isMe && task.status === 'rejected' && <button onClick={() => handleAction('start')} className="bp">↺ Revise & Resubmit</button>}
             {isMe && task.status === 'reopened' && <button onClick={() => handleAction('start')} className="bp">▶ Restart Work</button>}
-            {user.role?.toLowerCase() === 'admin' && task.status === 'submitted' && <button onClick={() => setShowRev(true)} className="bp">★ Approve / Review</button>}
-            {user.role?.toLowerCase() === 'admin' && task.status === 'under_review' && <button onClick={() => setShowRev(true)} className="bp">★ Complete Review</button>}
-            {user.role?.toLowerCase() === 'admin' && ['completed', 'rejected', 'reopened'].includes(task.status) && <button onClick={() => handleAction('reopen')} className="bg">↺ Reopen</button>}
+            {['admin','superadmin'].includes(user.role?.toLowerCase()) && task.status === 'submitted' && <button onClick={() => setShowRev(true)} className="bp">★ Approve / Review</button>}
+            {['admin','superadmin'].includes(user.role?.toLowerCase()) && task.status === 'under_review' && <button onClick={() => setShowRev(true)} className="bp">★ Complete Review</button>}
+            {['admin','superadmin'].includes(user.role?.toLowerCase()) && ['completed', 'rejected', 'reopened'].includes(task.status) && <button onClick={() => handleAction('reopen')} className="bg">↺ Reopen</button>}
           </div>
           
           {showSub && (

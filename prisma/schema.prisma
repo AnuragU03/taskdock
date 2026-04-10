@@ -54,6 +54,8 @@ model User {
   notifications    Notification[]
   attendance       Attendance[]
   profile          EmployeeProfile?
+  documents        EmployeeDocument[]
+  credentials      Credential[]     @relation("CredentialUser")
 }
 
 model VerificationToken {
@@ -169,3 +171,31 @@ model EmployeeProfile {
   
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model Credential {
+  id          String   @id @default(cuid())
+  toolName    String
+  toolUrl     String?
+  loginEmail  String?
+  loginPass   String?        // Stored encrypted/obfuscated
+  apiKey      String?
+  assignedToId String?
+  assignedTo  User?    @relation("CredentialUser", fields: [assignedToId], references: [id])
+  renewalDate String?        // "2026-12-31"
+  monthlyCost Float    @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model EmployeeDocument {
+  id          String   @id @default(cuid())
+  userId      String
+  docType     String          // "pan" | "aadhaar" | "certificate"
+  fileName    String
+  blobUrl     String          // Azure Blob URL
+  blobPath    String          // path in container for deletion
+  uploadedAt  DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

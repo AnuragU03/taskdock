@@ -124,6 +124,7 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
                   <option value="employee">Creative / Employee</option>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
+                  <option value="superadmin">Super Admin</option>
                 </select>
               </div>
             </div>

@@ -14,14 +14,11 @@ interface BoardViewsProps {
 export const GridV = ({ tasks, onClickTask }: BoardViewsProps) => {
   if (!tasks.length) return <p style={{ padding: '60px 0', textAlign: 'center', color: 'var(--t4)', fontSize: 18 }}>No tasks match your filters</p>;
   
-  const cols: any[][] = [[], [], []];
-  tasks.forEach((t, i) => cols[i % 3].push(t));
-  
   return (
-    <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'start' }}>
-      {cols.map((col, i) => (
-        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {col.map(t => <TCard key={t.id} task={t} onClick={() => onClickTask(t.id)} />)}
+    <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, alignItems: 'stretch' }}>
+      {tasks.map(t => (
+        <div key={t.id} style={{ display: 'flex' }}>
+          <TCard task={t} onClick={() => onClickTask(t.id)} />
         </div>
       ))}
     </div>

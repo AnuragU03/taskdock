@@ -6,7 +6,8 @@ import AdminClient from "./AdminClient";
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== 'admin') {
+  const role = (session.user as any).role;
+  if (!session?.user || (role !== 'admin' && role !== 'superadmin')) {
     redirect('/');
   }
 

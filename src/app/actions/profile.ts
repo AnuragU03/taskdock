@@ -13,7 +13,7 @@ export async function upsertProfile(userId: string, data: {
   roleDesc?: string;
 }) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== 'admin') throw new Error("Admin only");
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
 
   const profile = await prisma.employeeProfile.upsert({
     where: { userId },
@@ -35,7 +35,7 @@ export async function getProfile(userId?: string) {
 
 export async function getAllProfiles() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== 'admin') throw new Error("Admin only");
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
 
   return prisma.employeeProfile.findMany({
     include: { user: { select: { id: true, name: true, email: true, image: true, color: true, role: true } } }
@@ -44,7 +44,7 @@ export async function getAllProfiles() {
 
 export async function updateWorkspaceSettings(data: { defaultWorkHours?: number }) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== 'admin') throw new Error("Admin only");
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
 
   let workspace = await prisma.workspace.findFirst();
   if (!workspace) {

@@ -49,13 +49,17 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     setLoading(false);
   };
   
+  const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+
   const nav = [
     { id: '/', l: 'Board', ic: '⊞' },
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
-    ...( userRole === 'admin' ? [
+    { id: '/profile', l: 'My Profile', ic: '◉' },
+    ...( isAdmin ? [
       { id: '/import', l: 'Bulk Import', ic: '⇪' },
+      { id: '/vault', l: 'Credential Locker', ic: '🔐' },
       { id: '/admin', l: 'Admin Dashboard', ic: '⬡' }
     ] : [])
   ];

@@ -91,7 +91,7 @@ export async function getMonthAttendance(userId: string, year: number, month: nu
 
 export async function getAllTodayAttendance() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== 'admin') throw new Error("Admin only");
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
   const date = todayStr();
 
   return prisma.attendance.findMany({
@@ -102,7 +102,7 @@ export async function getAllTodayAttendance() {
 
 export async function adminOverrideAttendance(userId: string, date: string, status: string, note?: string) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== 'admin') throw new Error("Admin only");
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
 
   const record = await prisma.attendance.upsert({
     where: { userId_date: { userId, date } },

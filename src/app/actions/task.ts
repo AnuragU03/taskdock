@@ -134,7 +134,8 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
 export async function reviewTask(taskId: string, approved: boolean, fbText: string, score: number) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
-  if ((session.user as any).role !== 'admin') throw new Error("Requires admin role");
+  const userRole = (session.user as any).role;
+  if (userRole !== 'admin' && userRole !== 'superadmin') throw new Error("Requires admin role");
 
   const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
   const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
