@@ -72,9 +72,9 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
             </div>
           </div>
           {isAdmin && (
-            <div style={{ background: 'var(--purple-bg)', border: '1px solid var(--purple)33', borderRadius: 12, padding: '10px 12px' }}>
-              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--purple)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 4 }}>★ Admin task</div>
-              <p style={{ fontSize: 13, color: ' var(--purple)', lineHeight: 1.75, opacity: 0.8 }}>Admin tasks auto-route to Under Review status.</p>
+            <div style={{ background: 'var(--teal-bg)', border: '1px solid var(--teal)33', borderRadius: 12, padding: '10px 12px' }}>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--teal)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 4 }}>★ Admin task</div>
+              <p style={{ fontSize: 13, color: ' var(--teal)', lineHeight: 1.75, opacity: 0.8 }}>Admin tasks auto-route to Under Review status.</p>
             </div>
           )}
         </div>

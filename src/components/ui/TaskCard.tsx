@@ -80,11 +80,11 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
 
   if (isUnpicked) return (
     <div style={{ padding: '16px', background: 'linear-gradient(135deg,#1A0D2E,#0D0820)', borderRadius: '13px 13px 0 0', borderBottom: '1px solid #5B21B6', minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', right: -16, top: -16, width: 70, height: 70, borderRadius: '50%', background: '#7C3AED', opacity: .12 }} />
+      <div style={{ position: 'absolute', right: -16, top: -16, width: 70, height: 70, borderRadius: '50%', background: '#14B8A6', opacity: .12 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(124,58,237,.2)', border: '2px dashed #7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>◈</div>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(20,184,166,.2)', border: '2px dashed #14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>◈</div>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#C084FC', lineHeight: 1, letterSpacing: '-.3px' }}>PICK UP</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#2DD4BF', lineHeight: 1, letterSpacing: '-.3px' }}>PICK UP</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#FCD34D', lineHeight: 1.1, letterSpacing: '-.3px' }}>SOON</div>
         </div>
         {task.dueAt && (
@@ -99,8 +99,8 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
         )}
       </div>
       {task.dueAt && (
-        <div style={{ height: 2, background: 'rgba(124,58,237,.2)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
-          <div style={{ height: '100%', width: `${cd.pct}%`, background: 'linear-gradient(90deg,#7C3AED,#FCD34D)', borderRadius: 2, transition: 'width .8s' }} />
+        <div style={{ height: 2, background: 'rgba(20,184,166,.2)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
+          <div style={{ height: '100%', width: `${cd.pct}%`, background: 'linear-gradient(90deg,#14B8A6,#FCD34D)', borderRadius: 2, transition: 'width .8s' }} />
         </div>
       )}
     </div>

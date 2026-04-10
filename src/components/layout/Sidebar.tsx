@@ -158,14 +158,14 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       )}
 
       <Link href="/leaderboard" style={{ textDecoration: 'none' }}>
-        <div style={{ margin: '0 7px 8px', background: 'linear-gradient(135deg,#1A0D2E,#2D1654)', border: '1px solid #5B21B6', borderRadius: 12, padding: '10px 12px', cursor: 'pointer' }}>
-          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#C084FC', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 5 }}>My brownie points</div>
+        <div style={{ margin: '0 7px 8px', background: 'linear-gradient(135deg,#042F2E,#115E59)', border: '1px solid #0F766E', borderRadius: 12, padding: '10px 12px', cursor: 'pointer' }}>
+          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 5 }}>My brownie points</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 15 }}>🍫</span>
             <span style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 20, color: '#FCD34D', lineHeight: 1 }}>{user.browniePoints}</span>
-            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#C084FC', lineHeight: 1.45, marginTop: 4 }}>pts</span>
+            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#2DD4BF', lineHeight: 1.45, marginTop: 4 }}>pts</span>
           </div>
-          <div style={{ fontSize: 15, color: '#7C3AED', fontFamily: 'var(--font-mono), monospace', marginTop: 4 }}>Finish before deadline → +1</div>
+          <div style={{ fontSize: 15, color: '#14B8A6', fontFamily: 'var(--font-mono), monospace', marginTop: 4 }}>Finish before deadline → +1</div>
         </div>
       </Link>
     </div>
