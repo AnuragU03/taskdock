@@ -168,25 +168,6 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
           <div style={{ fontSize: 15, color: '#7C3AED', fontFamily: 'var(--font-mono), monospace', marginTop: 4 }}>Finish before deadline → +1</div>
         </div>
       </Link>
-      
-      <div style={{ padding: '9px 7px', borderTop: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 9px', marginBottom: 2 }}>
-          {user.image ? (
-            <img src={user.image} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${user.color || '#555'}` }} alt="Avatar" />
-          ) : (
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: user.color || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#fff', flexShrink: 0 }}>
-              {user.initials || (user.name || '?').charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, color: 'var(--t1)', fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
-            <div style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'capitalize', fontFamily: 'var(--font-mono), monospace' }}>{user.role}</div>
-          </div>
-        </div>
-        <button onClick={() => signOut({ callbackUrl: '/login' })} style={{ width: '100%', textAlign: 'left', padding: '5px 9px', borderRadius: 5, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--t4)', fontSize: 13, fontFamily: 'var(--font-sans), sans-serif' }}>
-          Sign out
-        </button>
-      </div>
     </div>
   );
 };

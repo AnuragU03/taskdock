@@ -7,6 +7,8 @@ import { authOptions } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { prisma } from "@/lib/prisma";
 
+import { Topbar } from "@/components/layout/Topbar";
+
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
 const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
@@ -105,8 +107,11 @@ export default async function RootLayout({
                  todayAttendance={todayAttendance}
                  earnings={earnings}
               />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {children}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                <Topbar user={session.user} />
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  {children}
+                </div>
               </div>
             </div>
           ) : (

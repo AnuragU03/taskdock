@@ -15,9 +15,9 @@ export const GridV = ({ tasks, onClickTask }: BoardViewsProps) => {
   if (!tasks.length) return <p style={{ padding: '60px 0', textAlign: 'center', color: 'var(--t4)', fontSize: 18 }}>No tasks match your filters</p>;
   
   return (
-    <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, alignItems: 'stretch' }}>
+    <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
       {tasks.map(t => (
-        <div key={t.id} style={{ display: 'flex' }}>
+        <div key={t.id} style={{ display: 'flex', minWidth: 0 }}>
           <TCard task={t} onClick={() => onClickTask(t.id)} />
         </div>
       ))}

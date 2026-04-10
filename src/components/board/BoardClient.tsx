@@ -47,6 +47,12 @@ export default function BoardClient({ initialTasks, user, allUsers }: { initialT
       if (aDone && !bDone) return 1;
       if (!aDone && bDone) return -1;
 
+      // 1.5. Urgent tasks stuck to the very top
+      const aUrgent = a.priority === 'urgent';
+      const bUrgent = b.priority === 'urgent';
+      if (aUrgent && !bUrgent) return -1;
+      if (!aUrgent && bUrgent) return 1;
+
       // 2. Sort by dueAt (earliest first), put nulls at the end
       if (!a.dueAt && b.dueAt) return 1;
       if (a.dueAt && !b.dueAt) return -1;
@@ -71,7 +77,7 @@ export default function BoardClient({ initialTasks, user, allUsers }: { initialT
     <div style={{ position: 'relative' }}>
       <StatsBar tasks={tasks} userRole={user.role} />
       
-      <div style={{ padding: '16px 24px 12px', background: 'var(--bg1)', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)' }}>
+      <div style={{ padding: '16px 24px', background: 'var(--bg1)', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)' }}>
         <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px' }}>Creative Board</h1>
         <span style={{ fontSize: 12, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>{tasks.length} tasks</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -82,7 +88,7 @@ export default function BoardClient({ initialTasks, user, allUsers }: { initialT
               onChange={e => setQ(e.target.value)} 
               placeholder="Search tasks…" 
               className="inp" 
-              style={{ paddingLeft: 27, width: 170, padding: '6px 11px 6px 26px' }} 
+              style={{ paddingLeft: 27, width: 170, padding: '6px 11px 6px 26px', minHeight: 36 }} 
             />
           </div>
         </div>
