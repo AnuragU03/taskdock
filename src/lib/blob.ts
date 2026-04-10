@@ -1,12 +1,15 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 
-const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = 'employee-docs';
 
 let _blobService: BlobServiceClient | null = null;
 
 function getBlobService() {
   if (!_blobService) {
+    const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
+    if (!connectionString) {
+      throw new Error("AZURE_STORAGE_CONNECTION_STRING is missing in environment variables.");
+    }
     _blobService = BlobServiceClient.fromConnectionString(connectionString);
   }
   return _blobService;
@@ -39,6 +42,7 @@ export async function getBlobSasUrl(fileName: string): Promise<string> {
   // Generate a SAS URL valid for 1 hour
   const { generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } = await import('@azure/storage-blob');
   
+  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
   const accountName = connectionString.match(/AccountName=([^;]+)/)?.[1] || '';
   const accountKey = connectionString.match(/AccountKey=([^;]+)/)?.[1] || '';
   const sharedKey = new StorageSharedKeyCredential(accountName, accountKey);
