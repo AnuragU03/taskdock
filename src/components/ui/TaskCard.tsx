@@ -40,11 +40,32 @@ export const getUrgency = (cd: any) => {
 };
 
 export const CardHeader = ({ task }: { task: TaskProps }) => {
-  const cd = useCD(task.dueAt || null);
+  const cdTicking = useCD(task.dueAt || null);
   const au = task.assignee;
   const done = ['completed', 'cancelled'].includes(task.status);
   const isSubmitted = task.status === 'submitted';
   const isUnpicked = task.type === 'open' && !task.assignedTo && task.status === 'open';
+
+  let frozenCd: any = null;
+  if (isSubmitted && task.dueAt) {
+    let submitTime = new Date();
+    if (task.events) {
+      try {
+        const evs = JSON.parse(task.events);
+        const se = [...evs].reverse().find((e: any) => e.type === 'TASK_SUBMITTED');
+        if (se) submitTime = new Date(se.at);
+      } catch {}
+    }
+    const diff = new Date(task.dueAt).getTime() - submitTime.getTime();
+    if (diff <= 0) {
+      const od = Math.abs(diff);
+      frozenCd = { exp: true, d: Math.floor(od / 86400000), h: Math.floor((od % 86400000) / 3600000), m: Math.floor((od % 3600000) / 60000), s: Math.floor((od % 60000) / 1000) };
+    } else {
+      frozenCd = { exp: false, d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000), s: Math.floor((diff % 60000) / 1000) };
+    }
+  }
+
+  const cd = frozenCd || cdTicking;
   
   // If task has no deadline and not done
   if (!task.dueAt && !done && !isUnpicked) {
@@ -96,8 +117,22 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 19, fontWeight: 700, color: '#F59E0B', letterSpacing: '-1px', lineHeight: 1, fontFamily: 'var(--font-mono), monospace' }}>SUBMITTED</div>
-          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B', opacity: .6, marginTop: 2, textAlign: 'right' }}>waiting on admin</div>
+          {task.dueAt ? (() => {
+            const totalH = cd.d * 24 + cd.h;
+            const timeStr = `${totalH}h ${cd.m}m ${cd.s}s`;
+            return (
+              <>
+                <div style={{ fontSize: totalH >= 100 ? 14 : totalH >= 10 ? 18 : 22, fontWeight: 700, color: '#F59E0B', letterSpacing: '-1px', lineHeight: 1, fontFamily: 'var(--font-mono), monospace' }}>
+                  {cd.exp && <span style={{ fontSize: 15, opacity: .7 }}>+</span>}{timeStr}
+                </div>
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B', opacity: .6, marginTop: 2, textAlign: 'right' }}>
+                  {cd.exp ? 'overdue when stopped' : 'left when stopped'}
+                </div>
+              </>
+            );
+          })() : (
+            <div style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B' }}>No deadline</div>
+          )}
         </div>
       </div>
       <div style={{ height: 2, background: 'rgba(245,158,11,.15)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
