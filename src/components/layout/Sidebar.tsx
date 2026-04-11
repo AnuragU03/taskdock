@@ -55,10 +55,11 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/', l: 'Board', ic: '⊞' },
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
-    { id: '/leaderboard', l: 'Leaderboard', ic: '🍫' },
+    { id: '/leaderboard', l: 'Leaderboard', ic: '🏆' },
+    { id: '/productivity', l: 'Productivity', ic: '📊' },
     ...( isAdmin ? [
       { id: '/import', l: 'Bulk Import', ic: '⇪' },
-      { id: '/vault', l: 'Credential Locker', ic: '🔐' },
+      { id: '/vault', l: 'Credential Locker', ic: '🔑' },
       { id: '/admin', l: 'Admin Dashboard', ic: '⬡' }
     ] : [])
   ];
@@ -101,8 +102,13 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       {isClockedIn && isClockedOut && (
         <div style={{ margin: '8px 7px 0', padding: '8px 12px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12 }}>
           <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>✓ Day complete</div>
-          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', marginTop: 2 }}>
-            {todayAttendance.hoursWorked ? `${todayAttendance.hoursWorked.toFixed(1)}h worked` : 'Done'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)' }}>
+              {todayAttendance.hoursWorked ? `${todayAttendance.hoursWorked.toFixed(1)}h worked` : 'Done'}
+            </div>
+            <button onClick={handleClockIn} disabled={loading} style={{ padding: 0, border: 'none', background: 'transparent', color: 'var(--t4)', fontFamily: 'var(--font-sans), sans-serif', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
+              {loading ? '...' : 'Resume Day'}
+            </button>
           </div>
         </div>
       )}

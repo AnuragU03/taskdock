@@ -19,6 +19,15 @@ export async function clockIn() {
     where: { userId_date: { userId, date } }
   });
 
+  if (existing?.clockOut) {
+    const record = await prisma.attendance.update({
+      where: { userId_date: { userId, date } },
+      data: { clockOut: null }
+    });
+    revalidatePath('/');
+    return record;
+  }
+
   if (existing?.clockIn) return existing; // already clocked in
 
   const record = await prisma.attendance.upsert({

@@ -43,6 +43,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
   const cd = useCD(task.dueAt || null);
   const au = task.assignee;
   const done = ['completed', 'cancelled'].includes(task.status);
+  const isSubmitted = task.status === 'submitted';
   const isUnpicked = task.type === 'open' && !task.assignedTo && task.status === 'open';
   
   // If task has no deadline and not done
@@ -78,6 +79,24 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
     </div>
   );
 
+  if (isSubmitted) return (
+    <div style={{ padding: '20px 16px', background: 'rgba(245,158,11,.08)', borderRadius: '13px 13px 0 0', borderBottom: '1px solid rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', gap: 14, minHeight: 112 }}>
+      {au?.image ? (
+        <img src={au.image} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, border: '3px solid #F59E0B' }} alt={au?.name || ''} />
+      ) : (
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: au?.color || '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#fff', flexShrink: 0, border: '2px solid #F59E0B' }}>{au?.initials || '⏳'}</div>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: '#F59E0B' }}>{au?.name ? `${au.name} (Submitted)` : 'Submitted'}</div>
+        <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'rgba(245,158,11,.8)', marginTop: 3, fontWeight: 600 }}>Review needed from admin</div>
+      </div>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B', opacity: .8 }}>Timeline</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', marginTop: 2 }}>STOPPED</div>
+      </div>
+    </div>
+  );
+
   if (isUnpicked) return (
     <div style={{ padding: '16px', background: 'linear-gradient(135deg,#1A0D2E,#0D0820)', borderRadius: '13px 13px 0 0', borderBottom: '1px solid #5B21B6', minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', right: -16, top: -16, width: 70, height: 70, borderRadius: '50%', background: '#14B8A6', opacity: .12 }} />
@@ -107,7 +126,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
   );
 
   const totalH = cd.d * 24 + cd.h;
-  const timeStr = `${String(totalH).padStart(2, '0')}H:${String(cd.m).padStart(2, '0')}M:${String(cd.s).padStart(2, '0')}S`;
+  const timeStr = `${totalH}h ${cd.m}m ${cd.s}s`;
 
   return (
     <div style={{ padding: '16px', background: urg?.bg, borderRadius: '13px 13px 0 0', borderBottom: `1px solid ${urg?.border}`, minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
