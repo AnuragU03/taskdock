@@ -80,19 +80,28 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
   );
 
   if (isSubmitted) return (
-    <div style={{ padding: '20px 16px', background: 'rgba(245,158,11,.08)', borderRadius: '13px 13px 0 0', borderBottom: '1px solid rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', gap: 14, minHeight: 112 }}>
-      {au?.image ? (
-        <img src={au.image} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, border: '3px solid #F59E0B' }} alt={au?.name || ''} />
-      ) : (
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: au?.color || '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#fff', flexShrink: 0, border: '2px solid #F59E0B' }}>{au?.initials || '⏳'}</div>
-      )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 16, fontWeight: 600, color: '#F59E0B' }}>{au?.name ? `${au.name} (Submitted)` : 'Submitted'}</div>
-        <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'rgba(245,158,11,.8)', marginTop: 3, fontWeight: 600 }}>Review needed from admin</div>
+    <div style={{ padding: '16px', background: 'rgba(245,158,11,.08)', borderRadius: '13px 13px 0 0', borderBottom: '1px solid rgba(245,158,11,.15)', minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', right: -18, top: -18, width: 80, height: 80, borderRadius: '50%', background: '#F59E0B', opacity: .07 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {au?.image ? (
+          <img src={au.image} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, border: `3px solid #F59E0B`, boxShadow: `0 0 0 4px rgba(245,158,11,.22)` }} alt={au?.name || ''} />
+        ) : (
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: au?.color || '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#fff', flexShrink: 0, border: `3px solid #F59E0B`, boxShadow: `0 0 0 4px rgba(245,158,11,.22)` }}>{au?.initials || '⏳'}</div>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{au?.name || 'Unassigned'}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+            <span className="ld" style={{ background: '#F59E0B' }} />
+            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '.08em' }}>review needed</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 19, fontWeight: 700, color: '#F59E0B', letterSpacing: '-1px', lineHeight: 1, fontFamily: 'var(--font-mono), monospace' }}>SUBMITTED</div>
+          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B', opacity: .6, marginTop: 2, textAlign: 'right' }}>waiting on admin</div>
+        </div>
       </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#F59E0B', opacity: .8 }}>Timeline</div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', marginTop: 2 }}>STOPPED</div>
+      <div style={{ height: 2, background: 'rgba(245,158,11,.15)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
+        <div style={{ height: '100%', width: '100%', background: '#F59E0B', borderRadius: 2 }} />
       </div>
     </div>
   );
@@ -165,7 +174,11 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
       <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
         <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--t1)', lineHeight: 1.45 }}>{task.title}</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <SPill status={task.status} />
+          {task.status === 'submitted' ? (
+             <span style={{ background: '#F59E0B', color: '#111', padding: '3px 8px', borderRadius: 5, fontSize: 11, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, letterSpacing: '.03em', textTransform: 'uppercase' }}>SUBMITTED</span>
+          ) : (
+            <SPill status={task.status} />
+          )}
           <PDot priority={task.priority} />
         </div>
       </div>
@@ -192,7 +205,11 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
           </div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 7, borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
-          <SPill status={task.status} />
+          {task.status === 'submitted' ? (
+             <span style={{ background: '#F59E0B', color: '#111', padding: '4px 10px', borderRadius: 6, fontSize: 13, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, letterSpacing: '.03em', textTransform: 'uppercase' }}>SUBMITTED</span>
+          ) : (
+            <SPill status={task.status} />
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {(() => {
               let count = 0;
