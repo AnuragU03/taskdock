@@ -133,3 +133,19 @@ export async function getRecentAttendance(userId: string, limit = 30) {
   });
 }
 
+export async function updateProdShift(userId: string, date: string, shift: 'morning' | 'afternoon', status: string | null) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) throw new Error("Admin only");
+
+  const data = shift === 'morning' ? { morningProd: status } : { afternoonProd: status };
+
+  await prisma.attendance.upsert({
+    where: { userId_date: { userId, date } },
+    update: data,
+    create: { userId, date, ...data, status: 'present' }
+  });
+
+  revalidatePath('/admin/tracker');
+  return { success: true };
+}
+

@@ -66,7 +66,16 @@ export async function calculateAllCPS() {
       ef = 150;
     }
 
-    const cps = (0.3 * cf) + (0.4 * tf) + (0.3 * ef);
+    let manualMod = 0;
+    (user.attendance || []).forEach(a => {
+      if ((a as any).morningProd === 'Productive') manualMod += 10;
+      if ((a as any).morningProd === 'Not productive') manualMod -= 10;
+      if ((a as any).afternoonProd === 'Productive') manualMod += 10;
+      if ((a as any).afternoonProd === 'Not productive') manualMod -= 10;
+    });
+
+    const baseCps = (0.3 * cf) + (0.4 * tf) + (0.3 * ef);
+    const cps = baseCps + manualMod;
     
     return {
       user,

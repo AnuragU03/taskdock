@@ -56,8 +56,9 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '🏆' },
-    { id: '/productivity', l: 'Productivity', ic: '📊' },
     ...( isAdmin ? [
+      { id: '/admin/tracker', l: 'Activity Tracker', ic: '📅' },
+      { id: '/productivity', l: 'CPS Metrics', ic: '📊' },
       { id: '/import', l: 'Bulk Import', ic: '⇪' },
       { id: '/vault', l: 'Credential Locker', ic: '🔑' },
       { id: '/admin', l: 'Admin Dashboard', ic: '⬡' }

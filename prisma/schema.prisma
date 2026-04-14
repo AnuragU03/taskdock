@@ -149,10 +149,12 @@ model Attendance {
   date        String    // "2026-04-08" — one record per user per day
   clockIn     DateTime?
   clockOut    DateTime?
-  status      String    @default("present") // present | halfday | leave | wfh
-  hoursWorked Float?
-  adminNote   String?
-  createdAt   DateTime  @default(now())
+  status        String    @default("present") // present | halfday | leave | wfh
+  hoursWorked   Float?
+  morningProd   String?   // "Productive" | "Not productive"
+  afternoonProd String?   // "Productive" | "Not productive"
+  adminNote     String?
+  createdAt     DateTime  @default(now())
   
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, date])
