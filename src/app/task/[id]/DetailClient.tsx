@@ -99,7 +99,20 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>← Board</button>
           
           {(isMgr || task.createdById === user.id) && (
-            <button onClick={async () => { if(window.confirm('Delete this task forever?')) { await deleteTask(task.id); router.push('/'); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>🗑️ Delete</button>
+            <button 
+              onClick={async () => { 
+                const challenge = window.prompt(`[DANGER] To permanently delete this task, type 'delete' below:`);
+                if (challenge === 'delete') { 
+                  await deleteTask(task.id); 
+                  router.push('/'); 
+                } else if (challenge !== null) {
+                  alert('Deletion cancelled. The text did not match.');
+                }
+              }} 
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              🗑️ Delete
+            </button>
           )}
         </div>
         

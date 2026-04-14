@@ -180,7 +180,16 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
                 </select>
                 {u.role !== 'superadmin' && (
                   <button 
-                    onClick={async () => { if(window.confirm(`Delete user ${u.name}?`)) { await deleteUser(u.id); flash('User deleted'); router.refresh(); } }} 
+                    onClick={async () => {
+                      const challenge = window.prompt(`[DANGER: ACCOUNT REMOVAL] To permanently delete user ${u.name}, type 'delete' below:`);
+                      if (challenge === 'delete') {
+                        await deleteUser(u.id);
+                        flash('User deleted');
+                        router.refresh();
+                      } else if (challenge !== null) {
+                        alert('Deletion cancelled. The text did not match.');
+                      }
+                    }} 
                     style={{ color: 'var(--red)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 16 }}
                   >
                     🗑️
