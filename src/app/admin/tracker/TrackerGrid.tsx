@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { updateProdShift } from '@/app/actions/attendance';
 
 export default function TrackerGrid({ users, days, year, month }: any) {
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   
   const handleUpdate = async (userId: string, date: string, shift: 'morning' | 'afternoon', value: string) => {
     try {
@@ -20,11 +21,14 @@ export default function TrackerGrid({ users, days, year, month }: any) {
           <tr>
             <th style={{ border: '1px solid var(--border)', padding: 12, minWidth: 100, borderLeft: 'none', borderTop: 'none', background: 'var(--bg2)' }}>{new Date(year, month-1).toLocaleString('default', { month: 'long' })}</th>
             {users.map((u: any) => (
-              <th key={u.id} colSpan={3} style={{ border: '1px solid var(--border)', padding: '12px', borderTop: 'none', background: 'var(--bg2)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <th key={u.id} colSpan={3} style={{ border: '1px solid var(--border)', padding: 0, borderTop: 'none', background: 'var(--bg2)' }}>
+                <button 
+                  onClick={() => setSelectedUser(u)}
+                  style={{ width: '100%', border: 'none', background: 'transparent', padding: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--t1)', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'bold' }}
+                >
                   <div style={{ width: 24, height: 24, borderRadius: '50%', background: u.color || 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{u.initials || u.name[0]}</div>
                   {u.name}
-                </div>
+                </button>
               </th>
             ))}
           </tr>
@@ -95,6 +99,55 @@ export default function TrackerGrid({ users, days, year, month }: any) {
           })}
         </tbody>
       </table>
+
+      {selectedUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setSelectedUser(null)}>
+          <div style={{ background: 'var(--bg1)', padding: 30, borderRadius: 16, border: '1px solid var(--border)', width: '100%', maxWidth: 450 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: selectedUser.color || 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700 }}>{selectedUser.initials || selectedUser.name[0]}</div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>{selectedUser.name}</div>
+                  <div style={{ fontSize: 13, color: 'var(--t4)' }}>Individual Productivity Report</div>
+                </div>
+              </div>
+              <button onClick={() => setSelectedUser(null)} style={{ border: 'none', background: 'transparent', fontSize: 24, color: 'var(--t4)', cursor: 'pointer' }}>×</button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 20 }}>
+              <div style={{ padding: 15, background: 'var(--bg2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>This Week</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, color: 'var(--t3)' }}>Productive:</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>{selectedUser.weekProd}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, color: 'var(--t3)' }}>Unproductive:</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--red)' }}>{selectedUser.weekUnprod}</span>
+                </div>
+              </div>
+
+              <div style={{ padding: 15, background: 'var(--bg2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>This Month</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, color: 'var(--t3)' }}>Productive:</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>{selectedUser.monthProd}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, color: 'var(--t3)' }}>Unproductive:</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--red)' }}>{selectedUser.monthUnprod}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ padding: 15, background: 'rgba(245, 158, 11, 0.1)', borderRadius: 10, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              <div style={{ fontSize: 13, color: 'var(--t2)', lineHeight: 1.5 }}>
+                Manual overrides account for exactly <strong>{(selectedUser.monthProd * 10) - (selectedUser.monthUnprod * 10)}</strong> CPS net points awarded directly to this employee&apos;s baseline productivity score this month.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
