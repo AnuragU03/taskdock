@@ -28,7 +28,7 @@ export default async function AdminTrackerPage() {
   const days = Array.from({ length: daysInMonth }, (_, i) => {
     const d = new Date(year, month - 1, i + 1);
     const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const isWeekend = d.getDay() === 0;
     return { day: i + 1, dayName: dayName.toLowerCase(), isWeekend };
   });
 

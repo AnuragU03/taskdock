@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Av, Toast } from '@/components/ui/Atoms';
-import { updateUserRole } from '@/app/actions/admin';
+import { updateUserRole, deleteUser } from '@/app/actions/admin';
 import { upsertProfile, updateWorkspaceSettings } from '@/app/actions/profile';
+import { useRouter } from 'next/navigation';
 import { getAllTodayAttendance, adminOverrideAttendance, getRecentAttendance } from '@/app/actions/attendance';
 
 function HistoryPanel({ userId }: { userId: string }) {
@@ -56,6 +57,7 @@ function HistoryPanel({ userId }: { userId: string }) {
 }
 
 export default function AdminClient({ members, workspace }: { members: any[], workspace: any }) {
+  const router = useRouter();
   const [toast, setToast] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('team');
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 2400); };
@@ -169,13 +171,21 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
                 </div>
               </div>
               <div style={{ fontSize: 16, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', fontWeight: 600 }}>{u.browniePoints}</div>
-              <div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <select className="inp" defaultValue={u.role} onChange={e => handleRoleChange(u.id, e.target.value)} style={{ padding: '6px 10px', fontSize: 14, minHeight: 0 }}>
                   <option value="employee">Creative / Employee</option>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
                   <option value="superadmin">Super Admin</option>
                 </select>
+                {u.role !== 'superadmin' && (
+                  <button 
+                    onClick={async () => { if(window.confirm(`Delete user ${u.name}?`)) { await deleteUser(u.id); flash('User deleted'); router.refresh(); } }} 
+                    style={{ color: 'var(--red)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                  >
+                    🗑️
+                  </button>
+                )}
               </div>
             </div>
           ))}

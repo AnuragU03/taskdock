@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Toast, SPill, Av } from '@/components/ui/Atoms';
 import { CardHeader } from '@/components/ui/TaskCard';
 import { CDBig } from '@/components/ui/Countdown';
-import { updateTask, pickupTask, submitWork, reviewTask, reopenTask, addComment } from '@/app/actions/task';
+import { updateTask, pickupTask, submitWork, reviewTask, reopenTask, addComment, deleteTask } from '@/app/actions/task';
 
 // Using the same format relative helper from HTML
 const fmtRel = (s: string) => {
@@ -97,6 +97,10 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
       <div style={{ width: 360, flexShrink: 0, borderRight: '1px solid var(--border)', background: 'var(--bg1)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>← Board</button>
+          
+          {(isMgr || task.createdById === user.id) && (
+            <button onClick={async () => { if(window.confirm('Delete this task forever?')) { await deleteTask(task.id); router.push('/'); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>🗑️ Delete</button>
+          )}
         </div>
         
         <div style={{ background: 'var(--bg0)', overflow: 'hidden' }}>

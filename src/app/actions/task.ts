@@ -285,3 +285,20 @@ export async function bulkCreateTasks(tasks: any[]) {
   revalidatePath('/open-queue');
   return { success: true, count: tasks.length };
 }
+
+export async function deleteTask(taskId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error("Unauthorized");
+  
+  const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
+  const isAdmin = ['admin', 'superadmin'].includes((session.user as any).role);
+  if (!isAdmin && taskObj?.createdById !== (session.user as any).id) {
+    throw new Error("Requires admin role or task creator");
+  }
+
+  await prisma.task.delete({ where: { id: taskId } });
+
+  revalidatePath('/');
+  revalidatePath('/open-queue');
+  return true;
+}
