@@ -47,8 +47,10 @@ export default async function AdminTrackerPage() {
     const attendanceMap: any = {};
     let monthProd = 0;
     let monthUnprod = 0;
+    let monthPoor = 0;
     let weekProd = 0;
     let weekUnprod = 0;
+    let weekPoor = 0;
 
     u.attendance.forEach((a: any) => {
       attendanceMap[a.date] = a;
@@ -63,6 +65,10 @@ export default async function AdminTrackerPage() {
         monthUnprod++;
         if (isThisWeek) weekUnprod++;
       }
+      if (a.morningProd === 'Poor') {
+        monthPoor++;
+        if (isThisWeek) weekPoor++;
+      }
       if (a.afternoonProd === 'Productive') {
         monthProd++;
         if (isThisWeek) weekProd++;
@@ -71,16 +77,20 @@ export default async function AdminTrackerPage() {
         monthUnprod++;
         if (isThisWeek) weekUnprod++;
       }
+      if (a.afternoonProd === 'Poor') {
+        monthPoor++;
+        if (isThisWeek) weekPoor++;
+      }
     });
 
-    return { ...u, attendanceMap, monthProd, monthUnprod, weekProd, weekUnprod };
+    return { ...u, attendanceMap, monthProd, monthUnprod, monthPoor, weekProd, weekUnprod, weekPoor };
   });
 
   const totalProd = usersMapped.reduce((acc, u) => acc + u.monthProd, 0);
-  const totalUnprod = usersMapped.reduce((acc, u) => acc + u.monthUnprod, 0);
+  const totalUnprod = usersMapped.reduce((acc, u) => acc + u.monthUnprod + u.monthPoor, 0);
   
   const totalWeekProd = usersMapped.reduce((acc, u) => acc + u.weekProd, 0);
-  const totalWeekUnprod = usersMapped.reduce((acc, u) => acc + u.weekUnprod, 0);
+  const totalWeekUnprod = usersMapped.reduce((acc, u) => acc + u.weekUnprod + u.weekPoor, 0);
 
   return (
     <div style={{ padding: '30px 40px', maxWidth: 1400, margin: '0 auto' }}>
