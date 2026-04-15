@@ -111,7 +111,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
               }} 
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 14, fontFamily: 'var(--font-sans), sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}
             >
-              🗑️ Delete
+              ✕ Delete
             </button>
           )}
         </div>

@@ -192,7 +192,7 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
                     }} 
                     style={{ color: 'var(--red)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 16 }}
                   >
-                    🗑️
+                    ✕
                   </button>
                 )}
               </div>

@@ -107,7 +107,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
         {au?.image ? (
           <img src={au.image} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, border: `3px solid #F59E0B`, boxShadow: `0 0 0 4px rgba(245,158,11,.22)` }} alt={au?.name || ''} />
         ) : (
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: au?.color || '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#fff', flexShrink: 0, border: `3px solid #F59E0B`, boxShadow: `0 0 0 4px rgba(245,158,11,.22)` }}>{au?.initials || '⏳'}</div>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: au?.color || '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#fff', flexShrink: 0, border: `3px solid #F59E0B`, boxShadow: `0 0 0 4px rgba(245,158,11,.22)` }}>{au?.initials || '◑'}</div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{au?.name || 'Unassigned'}</div>
@@ -252,7 +252,7 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
               else if (typeof task.comments === 'string') {
                 try { count = JSON.parse(task.comments).length; } catch {}
               }
-              return count > 0 ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>{count}💬</span> : null;
+              return count > 0 ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)' }}>{count} □</span> : null;
             })()}
           </div>
         </div>
