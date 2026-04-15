@@ -7,9 +7,9 @@ import { uploadDocument, deleteDocument } from '@/app/actions/documents';
 import { uploadProfilePhoto } from '@/app/actions/profile';
 
 const DOC_TYPES = [
-  { id: 'pan', label: 'PAN Card', icon: '🪪', desc: 'Permanent Account Number card' },
-  { id: 'aadhaar', label: 'Aadhaar Card', icon: '🆔', desc: 'Unique Identification card' },
-  { id: 'certificate', label: 'Certificate', icon: '📜', desc: 'Degree, diploma, or supporting document' },
+  { id: 'pan', label: 'PAN Card', icon: '□', desc: 'Permanent Account Number card' },
+  { id: 'aadhaar', label: 'Aadhaar Card', icon: '◎', desc: 'Unique Identification card' },
+  { id: 'certificate', label: 'Certificate', icon: '◈', desc: 'Degree, diploma, or supporting document' },
 ];
 
 export default function ProfileClient({ user }: { user: any }) {
@@ -36,17 +36,17 @@ export default function ProfileClient({ user }: { user: any }) {
   };
 
   const handleUpload = async (docType: string, file: File) => {
-    if (file.size > 10 * 1024 * 1024) { flash('❌ File too large (max 10MB)'); return; }
+    if (file.size > 10 * 1024 * 1024) { flash('File too large (max 10MB)'); return; }
     setUploading(docType);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('docType', docType);
       await uploadDocument(formData);
-      flash('✅ Document uploaded to Azure');
+      flash('Document uploaded');
       router.refresh();
     } catch (e: any) {
-      flash(`❌ Upload failed: ${e.message}`);
+      flash(`Upload failed: ${e.message}`);
     }
     setUploading(null);
   };

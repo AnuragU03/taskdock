@@ -28,7 +28,7 @@ export default function ImportClient({ members }: { members: any[] }) {
         
         mapTasks(data);
       } catch (err) {
-        flash('❌ Error reading file. Make sure it is a valid Excel or CSV.');
+        flash('Error reading file. Make sure it is a valid Excel or CSV.');
       }
     };
     reader.readAsBinaryString(file);
@@ -65,10 +65,10 @@ export default function ImportClient({ members }: { members: any[] }) {
     setLoading(true);
     try {
       const res = await bulkCreateTasks(tasks);
-      flash(`✅ Successfully imported ${res.count} tasks!`);
+      flash(`Imported ${res.count} tasks successfully`);
       setTimeout(() => router.push('/'), 1800);
     } catch (err) {
-      flash('❌ Error importing tasks.');
+      flash('Error importing tasks.');
       setLoading(false);
     }
   };

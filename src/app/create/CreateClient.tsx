@@ -27,10 +27,10 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
       // Auto-detect type: no assignee = open queue
       const payload = { ...f, type: f.assignedTo ? 'assigned' : 'open' };
       await createTask(payload);
-      setToast('💳 Task created successfully!');
+      setToast('Task created successfully');
       setTimeout(() => router.push('/'), 1300);
     } catch (e) {
-      setToast('❌ Failed to create task');
+      setToast('Failed to create task');
       setLoading(false);
     }
   };

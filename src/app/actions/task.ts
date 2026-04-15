@@ -230,16 +230,16 @@ export async function generateBrief(title: string, category?: string) {
   
   await new Promise(r => setTimeout(r, 1200)); 
   
-  const brief = `🚀 **Objective:** We need to execute on "${title}". Ensure all deliverables meet the highest quality standards.
+  const brief = `◈ **Objective:** We need to execute on "${title}". Ensure all deliverables meet the highest quality standards.
 
-🎨 **Style/Direction:** Follow our established brand guidelines. Keep the tone professional yet approachable.
+⊞ **Style/Direction:** Follow our established brand guidelines. Keep the tone professional yet approachable.
 
-📋 **Key Deliverables:**
+◱ **Key Deliverables:**
 - Initial concept / draft
 - Refined version based on feedback
 - Final high-resolution assets
 
-⏱ **Constraints:** Please stick to the agreed timeline. Flag any blockers early.`;
+⎔ **Constraints:** Please stick to the agreed timeline. Flag any blockers early.`;
   
   return category ? `[Category: ${category}]\n\n${brief}` : brief;
 }
