@@ -184,7 +184,9 @@ model Credential {
   assignedToId String?
   assignedTo  User?    @relation("CredentialUser", fields: [assignedToId], references: [id])
   renewalDate String?        // "2026-12-31"
-  monthlyCost Float    @default(0)
+  monthlyCost  Float   @default(0)
+  billingCycle String  @default("monthly")  // "monthly" | "yearly"
+  sharedWith   String? // JSON array of user IDs
   notes       String?
   createdAt   DateTime @default(now())
 }

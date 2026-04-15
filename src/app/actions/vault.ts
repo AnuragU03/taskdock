@@ -29,13 +29,42 @@ export async function addCredential(data: {
   assignedToId?: string;
   renewalDate?: string;
   monthlyCost?: number;
+  billingCycle?: string;
   notes?: string;
 }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
   assertAdmin((session.user as any).role);
 
-  await prisma.credential.create({ data });
+  await prisma.credential.create({ data: { ...data, billingCycle: data.billingCycle || 'monthly' } });
+  revalidatePath('/vault');
+  return true;
+}
+
+export async function shareCredential(credId: string, userId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error("Unauthorized");
+  assertAdmin((session.user as any).role);
+
+  const cred = await prisma.credential.findUnique({ where: { id: credId } });
+  const existing: string[] = cred?.sharedWith ? JSON.parse(cred.sharedWith) : [];
+  if (!existing.includes(userId)) existing.push(userId);
+
+  await prisma.credential.update({ where: { id: credId }, data: { sharedWith: JSON.stringify(existing) } });
+  revalidatePath('/vault');
+  return true;
+}
+
+export async function revokeCredential(credId: string, userId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error("Unauthorized");
+  assertAdmin((session.user as any).role);
+
+  const cred = await prisma.credential.findUnique({ where: { id: credId } });
+  const existing: string[] = cred?.sharedWith ? JSON.parse(cred.sharedWith) : [];
+  const updated = existing.filter(id => id !== userId);
+
+  await prisma.credential.update({ where: { id: credId }, data: { sharedWith: JSON.stringify(updated) } });
   revalidatePath('/vault');
   return true;
 }

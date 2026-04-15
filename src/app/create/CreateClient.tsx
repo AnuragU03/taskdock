@@ -107,6 +107,12 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
           {!isEmployee && (
             <div>
               <Lbl c="Assign to" sub="Leave empty → task goes to Open Queue for anyone to pick up"/>
+              <div style={{ display: 'flex', gap: 7, marginBottom: 7 }}>
+                <button type="button" onClick={() => set('assignedTo', (user as any).id)} style={{ padding: '4px 10px', borderRadius: 120, border: `1px solid ${f.assignedTo === (user as any).id ? 'var(--accent)' : 'var(--border)'}`, background: f.assignedTo === (user as any).id ? 'var(--accent-dim)' : 'var(--bg3)', color: f.assignedTo === (user as any).id ? 'var(--accent)' : 'var(--t4)', fontSize: 12, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, cursor: 'pointer', transition: 'all .12s' }}>
+                  ◎ Assign to Me
+                </button>
+                {f.assignedTo === (user as any).id && <button type="button" onClick={() => set('assignedTo', '')} style={{ padding: '4px 10px', borderRadius: 120, border: '1px solid var(--border)', background: 'transparent', color: 'var(--t4)', fontSize: 12, cursor: 'pointer' }}>Clear</button>}
+              </div>
               <select className="inp" value={f.assignedTo} onChange={e => set('assignedTo', e.target.value)}>
                 <option value="">No assignee (Open Queue) ◈</option>
                 {employees.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}

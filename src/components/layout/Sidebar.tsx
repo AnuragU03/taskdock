@@ -74,43 +74,44 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       
       {/* START MY DAY / CLOCK IN-OUT */}
       {!isClockedIn && (
-        <div style={{ margin: '8px 7px 0', padding: '10px 12px', background: 'linear-gradient(135deg,#0A1A10,#0D2818)', border: '1px solid var(--green)', borderRadius: 12 }} className="fu">
-          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 7 }}>☀ Good morning</div>
+        <div style={{ margin: '10px 7px 0', padding: '14px', background: 'linear-gradient(135deg,#061A0E,#0D2818)', border: '1px solid var(--green)', borderRadius: 14, boxShadow: '0 4px 22px rgba(34,197,94,.18)' }} className="fu">
+          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 10 }}>☀ Good morning</div>
           <button onClick={handleClockIn} disabled={loading}
-            style={{ width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'var(--green)', color: 'var(--bg0)', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 14, transition: 'all .12s' }}>
-            {loading ? '...' : '▶ Start My Day'}
+            style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'var(--green)', color: '#000', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 800, fontSize: 16, letterSpacing: '-.2px', transition: 'all .15s', boxShadow: '0 2px 12px rgba(34,197,94,.35)' }}>
+            {loading ? '◌ Starting…' : '▶ Start My Day'}
           </button>
         </div>
       )}
 
       {isClockedIn && !isClockedOut && (
-        <div style={{ margin: '8px 7px 0', padding: '8px 12px', background: 'var(--green-bg)', border: '1px solid var(--green)33', borderRadius: 12 }}>
+        <div style={{ margin: '10px 7px 0', padding: '10px 14px', background: 'linear-gradient(135deg,#061A0E,#0D2818)', border: '1px solid var(--green)55', borderRadius: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.08em' }}>● Clocked in</div>
-              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', marginTop: 2 }}>
+              <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2 }}>● In session</div>
+              <div style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', color: 'var(--t2)', fontWeight: 600 }}>
                 {new Date(todayAttendance.clockIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
             <button onClick={handleClockOut} disabled={loading}
-              style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--red)66', background: 'var(--red-bg)', color: 'var(--red)', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
-              {loading ? '...' : 'End Day'}
+              style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--red)66', background: 'var(--red-bg)', color: 'var(--red)', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              {loading ? '◌' : '◼ End Day'}
             </button>
           </div>
         </div>
       )}
 
       {isClockedIn && isClockedOut && (
-        <div style={{ margin: '8px 7px 0', padding: '8px 12px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12 }}>
-          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>✓ Day complete</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)' }}>
-              {todayAttendance.hoursWorked ? `${todayAttendance.hoursWorked.toFixed(1)}h worked` : 'Done'}
-            </div>
-            <button onClick={handleClockIn} disabled={loading} style={{ padding: 0, border: 'none', background: 'transparent', color: 'var(--t4)', fontFamily: 'var(--font-sans), sans-serif', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
-              {loading ? '...' : 'Resume Day'}
-            </button>
+        <div style={{ margin: '10px 7px 0', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>✓ Day complete</span>
+            <span style={{ fontSize: 13, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', fontWeight: 600 }}>
+              {todayAttendance.hoursWorked ? `${todayAttendance.hoursWorked.toFixed(1)}h` : '—'}
+            </span>
           </div>
+          <button onClick={handleClockIn} disabled={loading}
+            style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', color: 'var(--t2)', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 14, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {loading ? '◌' : '↺'} Resume Day
+          </button>
         </div>
       )}
 

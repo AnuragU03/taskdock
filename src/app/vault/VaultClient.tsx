@@ -1,20 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Toast, Av } from '@/components/ui/Atoms';
-import { getCredentials, addCredential, updateCredential, deleteCredential } from '@/app/actions/vault';
+import { getCredentials, addCredential, updateCredential, deleteCredential, shareCredential, revokeCredential } from '@/app/actions/vault';
+
+const BLANK = { toolName: '', toolUrl: '', loginEmail: '', loginPass: '', apiKey: '', assignedToId: '', renewalDate: '', monthlyCost: 0, billingCycle: 'monthly', notes: '' };
 
 export default function VaultClient({ members }: { members: any[] }) {
-  const router = useRouter();
   const [creds, setCreds] = useState<any[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [shareId, setShareId] = useState<string | null>(null);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 3000); };
 
-  const [form, setForm] = useState({ toolName: '', toolUrl: '', loginEmail: '', loginPass: '', apiKey: '', assignedToId: '', renewalDate: '', monthlyCost: 0, notes: '' });
+  const [form, setForm] = useState({ ...BLANK });
+  const [editForm, setEditForm] = useState({ ...BLANK });
 
   const load = async () => {
     setLoading(true);
@@ -27,38 +30,84 @@ export default function VaultClient({ members }: { members: any[] }) {
   const handleAdd = async () => {
     if (!form.toolName.trim()) { flash('Tool name is required'); return; }
     try {
-      await addCredential({
-        ...form,
-        monthlyCost: Number(form.monthlyCost) || 0,
-        assignedToId: form.assignedToId || undefined,
-        renewalDate: form.renewalDate || undefined
-      });
-      flash('✅ Credential saved');
+      await addCredential({ ...form, monthlyCost: Number(form.monthlyCost) || 0, assignedToId: form.assignedToId || undefined, renewalDate: form.renewalDate || undefined });
+      flash('Credential saved');
       setShowAdd(false);
-      setForm({ toolName: '', toolUrl: '', loginEmail: '', loginPass: '', apiKey: '', assignedToId: '', renewalDate: '', monthlyCost: 0, notes: '' });
+      setForm({ ...BLANK });
       load();
-    } catch { flash('❌ Error saving'); }
+    } catch { flash('Error saving'); }
+  };
+
+  const handleEditSave = async (id: string) => {
+    try {
+      await updateCredential(id, { ...editForm, monthlyCost: Number(editForm.monthlyCost) || 0, assignedToId: editForm.assignedToId || undefined, renewalDate: editForm.renewalDate || undefined });
+      flash('Credential updated');
+      setEditId(null);
+      load();
+    } catch { flash('Error updating'); }
   };
 
   const handleDelete = async (id: string) => {
-    try {
-      await deleteCredential(id);
-      flash('Credential deleted');
-      load();
-    } catch { flash('Error deleting'); }
+    try { await deleteCredential(id); flash('Deleted'); load(); } catch { flash('Error deleting'); }
+  };
+
+  const handleShare = async (credId: string, userId: string) => {
+    try { await shareCredential(credId, userId); flash('Shared'); load(); } catch { flash('Error sharing'); }
+  };
+
+  const handleRevoke = async (credId: string, userId: string) => {
+    try { await revokeCredential(credId, userId); flash('Revoked'); load(); } catch { flash('Error revoking'); }
   };
 
   const toggleReveal = (id: string) => {
-    setRevealed(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setRevealed(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   };
 
-  const totalCost = creds.reduce((sum, c) => sum + (c.monthlyCost || 0), 0);
+  const startEdit = (c: any) => {
+    setEditId(c.id);
+    setEditForm({ toolName: c.toolName || '', toolUrl: c.toolUrl || '', loginEmail: c.loginEmail || '', loginPass: c.loginPass || '', apiKey: c.apiKey || '', assignedToId: c.assignedToId || '', renewalDate: c.renewalDate || '', monthlyCost: c.monthlyCost || 0, billingCycle: c.billingCycle || 'monthly', notes: c.notes || '' });
+  };  
+
+  const totalMonthly = creds.reduce((sum, c) => {
+    const cost = c.monthlyCost || 0;
+    return sum + (c.billingCycle === 'yearly' ? cost / 12 : cost);
+  }, 0);
 
   const mask = (val: string | null) => val ? '•'.repeat(Math.min(val.length, 20)) : '—';
+
+  const CredForm = ({ f, setF, onSave, onCancel, saveLabel }: any) => (
+    <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 20 }} className="fu">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
+        <input className="inp" placeholder="Tool Name *" value={f.toolName} onChange={e => setF({ ...f, toolName: e.target.value })} />
+        <input className="inp" placeholder="URL (e.g. figma.com)" value={f.toolUrl} onChange={e => setF({ ...f, toolUrl: e.target.value })} />
+        <select className="inp" value={f.assignedToId} onChange={e => setF({ ...f, assignedToId: e.target.value })}>
+          <option value="">Assigned To (optional)</option>
+          {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
+        <input className="inp" placeholder="Login Email" value={f.loginEmail} onChange={e => setF({ ...f, loginEmail: e.target.value })} />
+        <input className="inp" type="password" placeholder="Password" value={f.loginPass} onChange={e => setF({ ...f, loginPass: e.target.value })} />
+        <input className="inp" placeholder="API Key (optional)" value={f.apiKey} onChange={e => setF({ ...f, apiKey: e.target.value })} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 120px', gap: 10, marginBottom: 14 }}>
+        <input className="inp" type="date" value={f.renewalDate} onChange={e => setF({ ...f, renewalDate: e.target.value })} />
+        <input className="inp" type="number" placeholder="Cost (₹)" value={f.monthlyCost || ''} onChange={e => setF({ ...f, monthlyCost: Number(e.target.value) })} />
+        <input className="inp" placeholder="Notes" value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} />
+        <select className="inp" value={f.billingCycle} onChange={e => setF({ ...f, billingCycle: e.target.value })}>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={onSave} className="bp">{saveLabel}</button>
+        <button onClick={onCancel} className="bg">Cancel</button>
+      </div>
+    </div>
+  );
+
+  const shareCred = shareId ? creds.find(c => c.id === shareId) : null;
+  const sharedIds: string[] = shareCred?.sharedWith ? JSON.parse(shareCred.sharedWith) : [];
 
   return (
     <div style={{ padding: '30px 40px', maxWidth: 1100, margin: '0 auto' }}>
@@ -71,56 +120,72 @@ export default function VaultClient({ members }: { members: any[] }) {
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 16px', textAlign: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)' }}>₹{totalCost.toLocaleString('en-IN')}</div>
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>Monthly Cost</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)' }}>₹{Math.round(totalMonthly).toLocaleString('en-IN')}</div>
+            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>Eff. Monthly Cost</div>
           </div>
-          <button onClick={() => setShowAdd(!showAdd)} className="bp">{showAdd ? 'Cancel' : '+ Add Tool'}</button>
+          <button onClick={() => { setShowAdd(!showAdd); setEditId(null); }} className="bp">{showAdd ? 'Cancel' : '+ Add Tool'}</button>
         </div>
       </div>
 
-      {showAdd && (
-        <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 20 }} className="fu">
-          <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 }}>Add New Tool / Credential</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
-            <input className="inp" placeholder="Tool Name *" value={form.toolName} onChange={e => setForm({ ...form, toolName: e.target.value })} />
-            <input className="inp" placeholder="URL (e.g. figma.com)" value={form.toolUrl} onChange={e => setForm({ ...form, toolUrl: e.target.value })} />
-            <select className="inp" value={form.assignedToId} onChange={e => setForm({ ...form, assignedToId: e.target.value })}>
-              <option value="">Assigned To (optional)</option>
-              {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+      {showAdd && <CredForm f={form} setF={setForm} onSave={handleAdd} onCancel={() => setShowAdd(false)} saveLabel="Save Credential →" />}
+
+      {/* Share Modal */}
+      {shareId && shareCred && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setShareId(null)}>
+          <div style={{ background: 'var(--bg1)', padding: 28, borderRadius: 16, border: '1px solid var(--border)', width: '100%', maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--t1)' }}>Share: {shareCred.toolName}</div>
+              <button onClick={() => setShareId(null)} style={{ border: 'none', background: 'transparent', fontSize: 20, color: 'var(--t4)', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {members.map(m => {
+                const isShared = sharedIds.includes(m.id);
+                return (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: isShared ? 'rgba(16,185,129,.06)' : 'var(--bg2)', borderRadius: 8, border: `1px solid ${isShared ? 'var(--green)33' : 'var(--border)'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Av user={m} sz={28} />
+                      <span style={{ fontSize: 14, color: 'var(--t1)' }}>{m.name}</span>
+                    </div>
+                    {isShared ? (
+                      <button onClick={() => handleRevoke(shareId, m.id)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--red)44', background: 'var(--red-bg)', color: 'var(--red)', cursor: 'pointer' }}>Revoke</button>
+                    ) : (
+                      <button onClick={() => handleShare(shareId, m.id)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--green)44', background: 'var(--green-bg)', color: 'var(--green)', cursor: 'pointer' }}>Share</button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
-            <input className="inp" placeholder="Login Email" value={form.loginEmail} onChange={e => setForm({ ...form, loginEmail: e.target.value })} />
-            <input className="inp" type="password" placeholder="Password" value={form.loginPass} onChange={e => setForm({ ...form, loginPass: e.target.value })} />
-            <input className="inp" placeholder="API Key (optional)" value={form.apiKey} onChange={e => setForm({ ...form, apiKey: e.target.value })} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
-            <input className="inp" type="date" placeholder="Renewal Date" value={form.renewalDate} onChange={e => setForm({ ...form, renewalDate: e.target.value })} />
-            <input className="inp" type="number" placeholder="Monthly Cost (₹)" value={form.monthlyCost || ''} onChange={e => setForm({ ...form, monthlyCost: Number(e.target.value) })} />
-            <input className="inp" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-          </div>
-          <button onClick={handleAdd} className="bp">Save Credential →</button>
         </div>
       )}
 
       <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr 1fr .8fr .5fr', padding: '12px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
-          <div>Tool</div><div>User</div><div>Credentials</div><div>Renewal</div><div>Cost/mo</div><div></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr 1fr .8fr .8fr .5fr', padding: '12px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+          <div>Tool</div><div>User</div><div>Credentials</div><div>Renewal</div><div>Cost</div><div>Shared</div><div></div>
         </div>
 
         {loading && <div style={{ padding: 40, textAlign: 'center', color: 'var(--t4)', fontSize: 14 }}>Loading...</div>}
-
-        {!loading && creds.length === 0 && (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--t4)', fontSize: 14 }}>No credentials stored yet. Click "+ Add Tool" to start.</div>
-        )}
+        {!loading && creds.length === 0 && <div style={{ padding: 40, textAlign: 'center', color: 'var(--t4)', fontSize: 14 }}>No credentials stored yet. Click &quot;+ Add Tool&quot; to start.</div>}
 
         {creds.map(c => {
           const isRevealed = revealed.has(c.id);
+          const isEditing = editId === c.id;
+          const sharedUserIds: string[] = c.sharedWith ? JSON.parse(c.sharedWith) : [];
+          const effCost = c.billingCycle === 'yearly' ? (c.monthlyCost / 12) : c.monthlyCost;
+
+          if (isEditing) return (
+            <div key={c.id} style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>Editing: {c.toolName}</div>
+              <CredForm f={editForm} setF={setEditForm} onSave={() => handleEditSave(c.id)} onCancel={() => setEditId(null)} saveLabel="Save Changes" />
+            </div>
+          );
+
           return (
-            <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr 1fr .8fr .5fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr 1fr .8fr .8fr .5fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--t1)' }}>{c.toolName}</div>
                 {c.toolUrl && <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', marginTop: 2 }}>{c.toolUrl}</div>}
+                <div style={{ display: 'inline-block', marginTop: 4, fontSize: 10, padding: '2px 6px', borderRadius: 4, background: c.billingCycle === 'yearly' ? 'rgba(59,130,246,.12)' : 'rgba(16,185,129,.08)', color: c.billingCycle === 'yearly' ? 'var(--blue)' : 'var(--green)', fontFamily: 'var(--font-mono), monospace', textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.billingCycle}</div>
               </div>
               <div>
                 {c.assignedTo ? (
@@ -131,9 +196,7 @@ export default function VaultClient({ members }: { members: any[] }) {
                 ) : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}
               </div>
               <div>
-                <div style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-mono), monospace' }}>
-                  {c.loginEmail || '—'}
-                </div>
+                <div style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-mono), monospace' }}>{c.loginEmail || '—'}</div>
                 <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => toggleReveal(c.id)}>
                   <span>{isRevealed ? (c.loginPass || '—') : mask(c.loginPass)}</span>
                   <span style={{ fontSize: 10, color: 'var(--accent)', textDecoration: 'underline' }}>{isRevealed ? 'Hide' : 'Show'}</span>
@@ -141,16 +204,28 @@ export default function VaultClient({ members }: { members: any[] }) {
               </div>
               <div>
                 {c.renewalDate ? (
-                  <span style={{ fontSize: 13, fontFamily: 'var(--font-mono), monospace', color: new Date(c.renewalDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'var(--red)' : 'var(--t2)' }}>
-                    {c.renewalDate}
-                  </span>
+                  <span style={{ fontSize: 13, fontFamily: 'var(--font-mono), monospace', color: new Date(c.renewalDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'var(--red)' : 'var(--t2)' }}>{c.renewalDate}</span>
                 ) : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}
               </div>
-              <div style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', fontWeight: 600, color: c.monthlyCost > 0 ? 'var(--accent)' : 'var(--t4)' }}>
-                {c.monthlyCost > 0 ? `₹${c.monthlyCost.toLocaleString('en-IN')}` : 'Free'}
-              </div>
               <div>
-                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--red)', opacity: 0.6 }} title="Delete">✕</button>
+                <div style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', fontWeight: 600, color: effCost > 0 ? 'var(--accent)' : 'var(--t4)' }}>
+                  {effCost > 0 ? `₹${Math.round(effCost).toLocaleString('en-IN')}` : 'Free'}
+                </div>
+                {c.billingCycle === 'yearly' && c.monthlyCost > 0 && (
+                  <div style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>₹{c.monthlyCost.toLocaleString('en-IN')} /yr</div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {sharedUserIds.slice(0, 3).map(uid => {
+                  const m = members.find(x => x.id === uid);
+                  return m ? <Av key={uid} user={m} sz={22} /> : null;
+                })}
+                {sharedUserIds.length > 3 && <span style={{ fontSize: 11, color: 'var(--t4)' }}>+{sharedUserIds.length - 3}</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--t3)' }} title="Edit">✎</button>
+                <button onClick={() => setShareId(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--t3)' }} title="Share">⊕</button>
+                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', opacity: 0.6 }} title="Delete">✕</button>
               </div>
             </div>
           );
