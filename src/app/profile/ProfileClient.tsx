@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Av, Toast } from '@/components/ui/Atoms';
 import { uploadDocument, deleteDocument } from '@/app/actions/documents';
+import { uploadProfilePhoto } from '@/app/actions/profile';
 
 const DOC_TYPES = [
   { id: 'pan', label: 'PAN Card', icon: '🪪', desc: 'Permanent Account Number card' },
@@ -15,7 +16,24 @@ export default function ProfileClient({ user }: { user: any }) {
   const router = useRouter();
   const [toast, setToast] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 3000); };
+
+  const handlePhotoUpload = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { flash('Photo too large (max 5MB)'); return; }
+    setPhotoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await uploadProfilePhoto(formData);
+      flash('Profile photo updated');
+      router.refresh();
+    } catch (e: any) {
+      flash(`Upload failed: ${e.message}`);
+    }
+    setPhotoUploading(false);
+  };
 
   const handleUpload = async (docType: string, file: File) => {
     if (file.size > 10 * 1024 * 1024) { flash('❌ File too large (max 10MB)'); return; }
@@ -49,7 +67,14 @@ export default function ProfileClient({ user }: { user: any }) {
 
       {/* PROFILE HEADER */}
       <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 32 }}>
-        <Av user={user} sz={80} />
+        {/* Clickable avatar with camera overlay */}
+        <label style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }} title="Click to change photo">
+          <Av user={user} sz={80} />
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg0)', fontSize: 13, color: '#fff', transition: 'all .15s' }}>
+            {photoUploading ? '◌' : '⊕'}
+          </div>
+          <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} />
+        </label>
         <div style={{ flex: 1 }}>
           <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px', marginBottom: 4 }}>{user.name}</h1>
           <div style={{ fontSize: 14, color: 'var(--t3)', marginBottom: 4 }}>{user.email}</div>
@@ -58,6 +83,7 @@ export default function ProfileClient({ user }: { user: any }) {
             {user.profile?.designation && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', color: 'var(--t2)', padding: '2px 8px', borderRadius: 5 }}>{user.profile.designation}</span>}
             {user.profile?.department && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', color: 'var(--t2)', padding: '2px 8px', borderRadius: 5 }}>{user.profile.department}</span>}
           </div>
+          <div style={{ fontSize: 12, color: 'var(--t4)', marginTop: 6, fontFamily: 'var(--font-mono), monospace' }}>Click avatar to update photo (JPG/PNG/WebP, max 5MB)</div>
         </div>
       </div>
 

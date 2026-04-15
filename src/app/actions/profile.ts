@@ -4,6 +4,36 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { uploadBlob, deleteBlob } from "@/lib/blob";
+
+export async function uploadProfilePhoto(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error("Unauthorized");
+  const userId = (session.user as any).id;
+
+  const file = formData.get('file') as File;
+  if (!file || file.size === 0) throw new Error("No file provided");
+  if (file.size > 5 * 1024 * 1024) throw new Error("File too large (max 5MB)");
+
+  const ext = file.name.split('.').pop() || 'jpg';
+  const blobPath = `profiles/${userId}.${ext}`;
+
+  // Delete old profile photo if it exists and is in our storage
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user?.image?.includes('profiles/')) {
+    const oldPath = decodeURIComponent(user.image.split('/').slice(-2).join('/').split('?')[0]);
+    try { await deleteBlob(oldPath); } catch { /* ignore if not found */ }
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const url = await uploadBlob(blobPath, buffer, file.type);
+
+  await prisma.user.update({ where: { id: userId }, data: { image: url } });
+
+  revalidatePath('/profile');
+  revalidatePath('/');
+  return url;
+}
 
 export async function upsertProfile(userId: string, data: {
   designation?: string;
