@@ -15,23 +15,34 @@ export const DLPick = ({ value, onChange }: { value: string | null; onChange: (v
     { l: 'Custom', h: null }
   ];
   
-  const mkISO = (h: number) => {
-    const d = new Date();
-    d.setHours(d.getHours() + h);
-    const p = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  const toLocal = (iso: string) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      const p = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    } catch { return iso; }
   };
-  
+
   const setP = (h: number | null) => {
     if (h === null) {
       setCustom(true);
       return;
     }
     setCustom(false);
-    onChange(mkISO(h));
+    const d = new Date();
+    d.setHours(d.getHours() + h);
+    onChange(d.toISOString());
   };
   
-  const active = (p: any) => p.h !== null && !custom && value === mkISO(p.h);
+  const active = (p: any) => {
+    if (p.h === null || custom || !value) return false;
+    try {
+      const diff = (new Date(value).getTime() - Date.now()) / 3600000;
+      return Math.abs(diff - p.h) < 0.05; // within ~3 mins
+    } catch { return false; }
+  };
   
   const formattedDate = value ? new Date(value).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
   
@@ -55,12 +66,20 @@ export const DLPick = ({ value, onChange }: { value: string | null; onChange: (v
           </button>
         ))}
       </div>
-      {(custom || !PRESET.some(active)) && (
+      {(custom || (value && !PRESET.some(p => p.h !== null && active(p)))) && (
         <input 
           type="datetime-local" 
           className="inp" 
-          value={value || ''} 
-          onChange={e => onChange(e.target.value)} 
+          value={toLocal(value || '')} 
+          onChange={e => {
+            const v = e.target.value;
+            if (!v) { onChange(''); return; }
+            try {
+              onChange(new Date(v).toISOString());
+            } catch {
+              onChange(v);
+            }
+          }} 
         />
       )}
       {value && !custom && (

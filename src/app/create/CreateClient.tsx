@@ -12,12 +12,12 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
   const router = useRouter();
   const isAdmin = user.role?.toLowerCase() === 'admin';
   const isEmployee = user.role?.toLowerCase() === 'employee' || !user.role;
-  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '', weight: 5 });
+  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '', weight: 5, isRecurring: false, recurringPattern: 'weekly' });
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
-  const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }));
-  const employees = allUsers.filter(u => u.role?.toLowerCase() !== 'admin');
+  const set = (k: string, v: any) => setF(p => ({ ...p, [k]: v }));
+  const allAssignable = allUsers; // Universal: anyone can be assigned to anyone
   const valid = f.title && f.desc && f.dueAt;
   
   const submit = async () => {
@@ -39,7 +39,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
     ...f, 
     id: 'prev', 
     status: f.assignedTo ? (isAdmin ? 'under_review' : 'assigned') : 'open', 
-    dueAt: f.dueAt ? new Date(f.dueAt.includes('T') ? f.dueAt : f.dueAt + 'T00:00') : new Date(Date.now() + 172800000),
+    dueAt: f.dueAt ? new Date(f.dueAt) : new Date(Date.now() + 172800000),
     assignee: allUsers.find(u => u.id === f.assignedTo)
   };
 
@@ -115,7 +115,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
               </div>
               <select className="inp" value={f.assignedTo} onChange={e => set('assignedTo', e.target.value)}>
                 <option value="">No assignee (Open Queue) ◈</option>
-                {employees.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                {allAssignable.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
               </select>
             </div>
           )}
@@ -126,6 +126,41 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
           <div>
             <Lbl c="Reference link"/>
             <input className="inp" value={f.refLink} onChange={e => set('refLink', e.target.value)} placeholder="Figma, Notion, Google Docs, Loom…"/>
+          </div>
+          {/* Recurring Task */}
+          <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: f.isRecurring ? 10 : 0 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={f.isRecurring}
+                  onChange={e => set('isRecurring', e.target.checked)}
+                  style={{ accentColor: 'var(--accent)', width: 16, height: 16 }}
+                />
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', fontFamily: 'var(--font-sans), sans-serif' }}>Recurring Task</span>
+              </label>
+              <span style={{ fontSize: 12, color: 'var(--t4)' }}>Auto-repeat this task on a schedule</span>
+            </div>
+            {f.isRecurring && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {['daily', 'weekly', 'biweekly', 'monthly'].map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => set('recurringPattern', p)}
+                    style={{
+                      padding: '5px 12px', borderRadius: 120,
+                      border: `1px solid ${f.recurringPattern === p ? 'var(--accent)' : 'var(--border)'}`,
+                      background: f.recurringPattern === p ? 'var(--accent-dim)' : 'var(--bg2)',
+                      color: f.recurringPattern === p ? 'var(--accent)' : 'var(--t3)',
+                      fontSize: 12, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize'
+                    }}
+                  >
+                    ↺ {p}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <Lbl c={`Task Weight (Complexity/Importance): ${f.weight} / 10`} sub="Used in productivity math formula. Default is 5."/>

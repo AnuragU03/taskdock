@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Toast, SPill, Av } from '@/components/ui/Atoms';
 import { CardHeader } from '@/components/ui/TaskCard';
 import { CDBig } from '@/components/ui/Countdown';
-import { updateTask, pickupTask, submitWork, reviewTask, reopenTask, addComment, deleteTask } from '@/app/actions/task';
+import { updateTask, pickupTask, submitWork, reviewTask, reopenTask, addComment, deleteTask, abandonTask } from '@/app/actions/task';
 
 // Using the same format relative helper from HTML
 const fmtRel = (s: string) => {
@@ -14,9 +14,10 @@ const fmtRel = (s: string) => {
 };
 
 const EI: Record<string, string> = {
-  TASK_CREATED: '✦', TASK_ASSIGNED: '→', TASK_OPENED: '◈', TASK_PICKED_UP: '⊙',
+  TASK_CREATED: '✦', TASK_ASSIGNED: '◎', TASK_OPENED: '◈', TASK_PICKED_UP: '⊙',
   TASK_ACCEPTED: '✓', TASK_STARTED: '▶', TASK_SUBMITTED: '↑', TASK_APPROVED: '✓',
-  TASK_REJECTED: '✗', TASK_REOPENED: '↺', TASK_REMINDER_SENT: '⏰', TASK_UPDATED: '✎'
+  TASK_REJECTED: '✕', TASK_REOPENED: '↺', TASK_REMINDER_SENT: '◷', TASK_UPDATED: '✎',
+  TASK_ABANDONED: '⊘'
 };
 
 export default function DetailClient({ initTask, user, allUsers }: { initTask: any; user: any; allUsers: any[] }) {
@@ -26,10 +27,15 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
   const [sText, setSText] = useState('');
   const [sLink, setSLink] = useState('');
   const [fbText, setFbText] = useState('');
-  const [score, setScore] = useState(0);
   const [showSub, setShowSub] = useState(initTask.status === 'in_progress' && initTask.assignedToId === user.id);
   const [showRev, setShowRev] = useState(false);
+  const [showAbandon, setShowAbandon] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  // 3-tier scoring state
+  const [completionScore, setCompletionScore] = useState(0);
+  const [qualityScore, setQualityScore] = useState(0);
+  const [abandonReason, setAbandonReason] = useState('');
+  const [abandonPenalty, setAbandonPenalty] = useState(0);
   
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 2400); };
   
@@ -46,17 +52,20 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         const u = await submitWork(task.id, sText, sLink);
         setTask(u); setShowSub(false); flash('Submitted ✓');
       } else if (action === 'approve') {
-        if (!score) { flash('Please select a score first'); return; }
-        const u = await reviewTask(task.id, true, fbText, score);
-        setTask(u); setShowRev(false); setScore(0); flash('Task approved!');
+        if (!completionScore || !qualityScore) { flash('Please fill in all score tiers'); return; }
+        const u = await reviewTask(task.id, true, fbText, completionScore, qualityScore);
+        setTask(u); setShowRev(false); setCompletionScore(0); setQualityScore(0); flash('Task approved!');
       } else if (action === 'reject') {
-        if (!score) { flash('Please select a score first'); return; }
+        if (!completionScore || !qualityScore) { flash('Please fill in all score tiers'); return; }
         if (!fbText) { flash('Feedback required for rejection'); return; }
-        const u = await reviewTask(task.id, false, fbText, score);
-        setTask(u); setShowRev(false); setScore(0); flash('Sent back for revision');
+        const u = await reviewTask(task.id, false, fbText, completionScore, qualityScore);
+        setTask(u); setShowRev(false); setCompletionScore(0); setQualityScore(0); flash('Sent back for revision');
       } else if (action === 'reopen') {
         const u = await reopenTask(task.id);
         setTask(u); flash('Reopened');
+      } else if (action === 'abandon') {
+        const u = await abandonTask(task.id, abandonReason, abandonPenalty);
+        setTask(u); setShowAbandon(false); flash('Task abandoned');
       }
       router.refresh();
     } catch {
@@ -214,7 +223,7 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
               { l: 'Assigned to', v: task.assignee ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}><Av user={task.assignee} sz={40} /><span style={{ fontSize: 15, color: 'var(--t1)' }}>{task.assignee.name}</span></div> : <span style={{ fontSize: 13, color: 'var(--t4)', marginTop: 5, display: 'block' }}>—</span> },
               { l: 'Category', v: <div style={{ marginTop: 5 }}>{task.category ? <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', background: 'var(--bg3)', padding: '2px 8px', borderRadius: 5, color: 'var(--t2)' }}>{task.category}</span> : <span style={{ fontSize: 13, color: 'var(--t4)' }}>—</span>}</div> },
               task.productivity ? { l: 'Productivity Score', v: <div style={{ marginTop: 2, display: 'flex', alignItems: 'baseline', gap: 4 }}><span style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 700, fontSize: 22, color: 'var(--green)' }}>{task.productivity}</span><span style={{ fontSize: 10, color: 'var(--t4)' }}>pts/hr</span></div> } : null,
-              task.adminScore ? { l: 'Quality Rating', v: <div style={{ marginTop: 2, fontSize: 18, color: '#FCD34D' }}>{"★".repeat(task.adminScore)}{"☆".repeat(5 - task.adminScore)}</div> } : null
+              task.totalScore != null ? { l: 'Performance Score', v: <div style={{ marginTop: 2, display: 'flex', alignItems: 'baseline', gap: 6 }}><span style={{ fontFamily: 'var(--font-sans), sans-serif', fontWeight: 800, fontSize: 26, color: task.totalScore >= 80 ? 'var(--green)' : task.totalScore >= 50 ? 'var(--amber)' : 'var(--red)' }}>{task.totalScore}</span><span style={{ fontSize: 11, color: 'var(--t4)' }}>/100</span></div> } : null
             ].filter(Boolean).map((stat: any) => (
               <div key={stat.l} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 11, padding: '9px 11px' }}>
                 <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.09em' }}>{stat.l}</div>{stat.v}
@@ -223,14 +232,17 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           </div>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 18 }}>
-            {isUnassigned && <button onClick={() => handleAction('pickup')} className="bp">◈ Pick Up & Start</button>}
-            {isMe && task.status === 'assigned' && <button onClick={() => handleAction('accept')} className="bp">▶ Accept & Start</button>}
+            {isUnassigned && <button onClick={() => handleAction('pickup')} className="bp">◈ Pick Up &amp; Start</button>}
+            {isMe && task.status === 'assigned' && <button onClick={() => handleAction('accept')} className="bp">▶ Accept &amp; Start</button>}
             {isMe && task.status === 'in_progress' && !showSub && <button onClick={() => setShowSub(true)} className="bp">↑ Submit Work</button>}
-            {isMe && task.status === 'rejected' && <button onClick={() => handleAction('start')} className="bp">↺ Revise & Resubmit</button>}
+            {isMe && task.status === 'rejected' && <button onClick={() => handleAction('start')} className="bp">↺ Revise &amp; Resubmit</button>}
             {isMe && task.status === 'reopened' && <button onClick={() => handleAction('start')} className="bp">▶ Restart Work</button>}
             {['admin','superadmin'].includes(user.role?.toLowerCase()) && task.status === 'submitted' && <button onClick={() => setShowRev(true)} className="bp">★ Approve / Review</button>}
             {['admin','superadmin'].includes(user.role?.toLowerCase()) && task.status === 'under_review' && <button onClick={() => setShowRev(true)} className="bp">★ Complete Review</button>}
             {['admin','superadmin'].includes(user.role?.toLowerCase()) && ['completed', 'rejected', 'reopened'].includes(task.status) && <button onClick={() => handleAction('reopen')} className="bg">↺ Reopen</button>}
+            {['admin','superadmin'].includes(user.role?.toLowerCase()) && ['open','assigned','in_progress'].includes(task.status) && !task.isAbandoned && (
+              <button onClick={() => setShowAbandon(true)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--red)44', background: 'var(--red-bg)', color: 'var(--red)', fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, cursor: 'pointer' }}>✕ Abandon Task</button>
+            )}
           </div>
           
           {showSub && (
@@ -246,39 +258,66 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
           )}
           
           {showRev && (
-            <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', marginBottom: 16 }} className="fu">
-              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Review submission</div>
+            <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }} className="fu">
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 }}>★ Performance Review — 100 Point Scorecard</div>
               {task.subText && <div style={{ background: 'var(--bg1)', borderRadius: 7, padding: '9px 11px', marginBottom: 7, fontSize: 15, color: 'var(--t2)', lineHeight: 1.75, fontStyle: 'italic' }}>{task.subText}</div>}
-              {task.subLink && <div style={{ background: 'var(--accent-dim)', borderRadius: 7, padding: '7px 10px', marginBottom: 12, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#FB923C' }}>{task.subLink}</div>}
-              
-              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-                {[1, 2, 3, 4, 5].map(s => (
-                  <button 
-                    key={s} 
-                    onClick={() => setScore(s)} 
-                    style={{ 
-                      flex: 1, 
-                      padding: '10px 0', 
-                      borderRadius: 8, 
-                      border: `1.5px solid ${score === s ? 'var(--accent)' : 'var(--border)'}`, 
-                      background: score === s ? 'var(--accent-dim)' : 'var(--bg1)', 
-                      color: score === s ? 'var(--accent)' : 'var(--t2)',
-                      fontFamily: 'var(--font-sans), sans-serif',
-                      fontSize: 16,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.12s'
-                    }}
-                  >
-                    {s} ★
-                  </button>
-                ))}
+              {task.subLink && <div style={{ background: 'var(--accent-dim)', borderRadius: 7, padding: '7px 10px', marginBottom: 14, fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: '#FB923C' }}>{task.subLink}</div>}
+
+              {/* Tier 1: Completion (0-30) */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>① Completion <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>— Did they fully meet all deliverables?</span></div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono), monospace' }}>{completionScore}<span style={{ fontSize: 12, color: 'var(--t4)', fontWeight: 400 }}>/30</span></div>
+                </div>
+                <input type="range" min={0} max={30} step={1} value={completionScore} onChange={e => setCompletionScore(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginTop: 2 }}><span>Incomplete</span><span>Partial</span><span>Full</span></div>
               </div>
-              <textarea className="inp" value={fbText} onChange={e => setFbText(e.target.value)} placeholder="Feedback (required if rejecting)" style={{ marginBottom: 12 }} />
+
+              {/* Tier 2: Quality (0-40) */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>② Quality &amp; Review <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>— Super admin subjective quality score</span></div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono), monospace' }}>{qualityScore}<span style={{ fontSize: 12, color: 'var(--t4)', fontWeight: 400 }}>/40</span></div>
+                </div>
+                <input type="range" min={0} max={40} step={1} value={qualityScore} onChange={e => setQualityScore(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginTop: 2 }}><span>Poor</span><span>Acceptable</span><span>Excellent</span></div>
+              </div>
+
+              {/* Tier 3: Productivity (auto) */}
+              <div style={{ marginBottom: 16, padding: '10px 14px', background: 'var(--bg1)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>③ Productivity Speed</div>
+                <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 3 }}>Auto-calculated on server based on time taken vs task weight. <span style={{ color: 'var(--green)' }}>Max 30 pts.</span></div>
+              </div>
+
+              {/* Live Total */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, padding: '10px 14px', background: 'var(--accent-dim)', borderRadius: 10, border: '1px solid var(--accent)33' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-sans), sans-serif' }}>{completionScore + qualityScore}<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--t4)' }}>+auto</span></div>
+                <div style={{ fontSize: 12, color: 'var(--t3)' }}>Estimated total · server will add productivity score</div>
+              </div>
+
+              <textarea className="inp" value={fbText} onChange={e => setFbText(e.target.value)} placeholder="Narrative feedback (required if rejecting)" style={{ marginBottom: 12 }} />
               <div style={{ display: 'flex', gap: 7 }}>
-                <button onClick={() => handleAction('approve')} style={{ background: 'var(--green)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✓ Approve</button>
-                <button onClick={() => handleAction('reject')} style={{ background: 'var(--red)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}>✗ Reject</button>
+                <button onClick={() => handleAction('approve')} style={{ background: 'var(--green)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 18px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>✓ Approve</button>
+                <button onClick={() => handleAction('reject')} style={{ background: 'var(--red)', color: 'var(--bg0)', border: 'none', borderRadius: 8, padding: '8px 18px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>✗ Reject</button>
                 <button onClick={() => setShowRev(false)} className="bg">Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {/* Abandon Modal */}
+          {showAbandon && (
+            <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red)44', borderRadius: 14, padding: '20px', marginBottom: 16 }} className="fu">
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>✕ Abandon Task</div>
+              <p style={{ fontSize: 13, color: 'var(--t3)', marginBottom: 12 }}>This task will be marked as <strong>Abandoned</strong> and removed from active queues. Optionally apply a brownie penalty.</p>
+              <textarea className="inp" value={abandonReason} onChange={e => setAbandonReason(e.target.value)} placeholder="Reason for abandonment (e.g. No output after 4 hrs)" rows={2} style={{ marginBottom: 10 }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <label style={{ fontSize: 13, color: 'var(--t2)', whiteSpace: 'nowrap' }}>Brownie Penalty:</label>
+                <input type="number" className="inp" min={0} max={10} value={abandonPenalty} onChange={e => setAbandonPenalty(Number(e.target.value))} style={{ width: 80 }} />
+                <span style={{ fontSize: 12, color: 'var(--t4)' }}>points (0 = skip/no penalty)</span>
+              </div>
+              <div style={{ display: 'flex', gap: 7 }}>
+                <button onClick={() => handleAction('abandon')} style={{ background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Confirm Abandon</button>
+                <button onClick={() => setShowAbandon(false)} className="bg">Cancel</button>
               </div>
             </div>
           )}

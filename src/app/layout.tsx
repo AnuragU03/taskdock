@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { prisma } from "@/lib/prisma";
 
 import { Topbar } from "@/components/layout/Topbar";
+import { NotifPatti } from "@/components/layout/NotifPatti";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
 const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
@@ -109,6 +110,7 @@ export default async function RootLayout({
               />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <Topbar user={session.user} />
+                <NotifPatti initialCount={unreadNotifsCount} />
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                   {children}
                 </div>

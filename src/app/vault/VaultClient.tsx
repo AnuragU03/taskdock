@@ -6,6 +6,72 @@ import { getCredentials, addCredential, updateCredential, deleteCredential, shar
 
 const BLANK = { toolName: '', toolUrl: '', loginEmail: '', loginPass: '', apiKey: '', assignedToId: '', renewalDate: '', monthlyCost: 0, billingCycle: 'monthly', notes: '' };
 
+// ── CredForm is defined OUTSIDE VaultClient to prevent remounting on every keystroke ──
+function CredForm({ f, setF, onSave, onCancel, saveLabel, members, savedEmails }: {
+  f: any; setF: (v: any) => void; onSave: () => void; onCancel: () => void;
+  saveLabel: string; members: any[]; savedEmails: string[];
+}) {
+  const [showEmailList, setShowEmailList] = useState(false);
+  const filteredEmails = savedEmails.filter(e => e.toLowerCase().includes(f.loginEmail?.toLowerCase() || ''));
+
+  return (
+    <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 20 }} className="fu">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
+        <input className="inp" placeholder="Tool Name *" value={f.toolName} onChange={e => setF({ ...f, toolName: e.target.value })} />
+        <input className="inp" placeholder="URL (e.g. figma.com)" value={f.toolUrl} onChange={e => setF({ ...f, toolUrl: e.target.value })} />
+        <select className="inp" value={f.assignedToId} onChange={e => setF({ ...f, assignedToId: e.target.value })}>
+          <option value="">Assigned To (optional)</option>
+          {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
+        {/* Email with saved suggestions */}
+        <div style={{ position: 'relative' }}>
+          <input
+            className="inp"
+            placeholder="Login Email"
+            value={f.loginEmail}
+            autoComplete="off"
+            onFocus={() => setShowEmailList(true)}
+            onBlur={() => setTimeout(() => setShowEmailList(false), 150)}
+            onChange={e => setF({ ...f, loginEmail: e.target.value })}
+          />
+          {showEmailList && filteredEmails.length > 0 && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, zIndex: 100, marginTop: 4, overflow: 'hidden' }}>
+              {filteredEmails.map(email => (
+                <div
+                  key={email}
+                  onMouseDown={() => { setF({ ...f, loginEmail: email }); setShowEmailList(false); }}
+                  style={{ padding: '8px 12px', fontSize: 13, fontFamily: 'var(--font-mono), monospace', color: 'var(--t2)', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  {email}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <input className="inp" type="password" placeholder="Password" value={f.loginPass} autoComplete="new-password" onChange={e => setF({ ...f, loginPass: e.target.value })} />
+        <input className="inp" placeholder="API Key (optional)" value={f.apiKey} onChange={e => setF({ ...f, apiKey: e.target.value })} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 120px', gap: 10, marginBottom: 14 }}>
+        <input className="inp" type="date" value={f.renewalDate} onChange={e => setF({ ...f, renewalDate: e.target.value })} />
+        <input className="inp" type="number" placeholder="Cost (₹)" value={f.monthlyCost || ''} onChange={e => setF({ ...f, monthlyCost: Number(e.target.value) })} />
+        <input className="inp" placeholder="Notes" value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} />
+        <select className="inp" value={f.billingCycle} onChange={e => setF({ ...f, billingCycle: e.target.value })}>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={onSave} className="bp">{saveLabel}</button>
+        <button onClick={onCancel} className="bg">Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 export default function VaultClient({ members }: { members: any[] }) {
   const [creds, setCreds] = useState<any[]>([]);
   const [toast, setToast] = useState<string | null>(null);
@@ -26,6 +92,9 @@ export default function VaultClient({ members }: { members: any[] }) {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Collect all saved emails from existing credentials for the dropdown suggestion
+  const savedEmails = Array.from(new Set(creds.map(c => c.loginEmail).filter(Boolean)));
 
   const handleAdd = async () => {
     if (!form.toolName.trim()) { flash('Tool name is required'); return; }
@@ -66,7 +135,7 @@ export default function VaultClient({ members }: { members: any[] }) {
   const startEdit = (c: any) => {
     setEditId(c.id);
     setEditForm({ toolName: c.toolName || '', toolUrl: c.toolUrl || '', loginEmail: c.loginEmail || '', loginPass: c.loginPass || '', apiKey: c.apiKey || '', assignedToId: c.assignedToId || '', renewalDate: c.renewalDate || '', monthlyCost: c.monthlyCost || 0, billingCycle: c.billingCycle || 'monthly', notes: c.notes || '' });
-  };  
+  };
 
   const totalMonthly = creds.reduce((sum, c) => {
     const cost = c.monthlyCost || 0;
@@ -74,37 +143,6 @@ export default function VaultClient({ members }: { members: any[] }) {
   }, 0);
 
   const mask = (val: string | null) => val ? '•'.repeat(Math.min(val.length, 20)) : '—';
-
-  const CredForm = ({ f, setF, onSave, onCancel, saveLabel }: any) => (
-    <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 20 }} className="fu">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
-        <input className="inp" placeholder="Tool Name *" value={f.toolName} onChange={e => setF({ ...f, toolName: e.target.value })} />
-        <input className="inp" placeholder="URL (e.g. figma.com)" value={f.toolUrl} onChange={e => setF({ ...f, toolUrl: e.target.value })} />
-        <select className="inp" value={f.assignedToId} onChange={e => setF({ ...f, assignedToId: e.target.value })}>
-          <option value="">Assigned To (optional)</option>
-          {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
-        <input className="inp" placeholder="Login Email" value={f.loginEmail} onChange={e => setF({ ...f, loginEmail: e.target.value })} />
-        <input className="inp" type="password" placeholder="Password" value={f.loginPass} onChange={e => setF({ ...f, loginPass: e.target.value })} />
-        <input className="inp" placeholder="API Key (optional)" value={f.apiKey} onChange={e => setF({ ...f, apiKey: e.target.value })} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 120px', gap: 10, marginBottom: 14 }}>
-        <input className="inp" type="date" value={f.renewalDate} onChange={e => setF({ ...f, renewalDate: e.target.value })} />
-        <input className="inp" type="number" placeholder="Cost (₹)" value={f.monthlyCost || ''} onChange={e => setF({ ...f, monthlyCost: Number(e.target.value) })} />
-        <input className="inp" placeholder="Notes" value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} />
-        <select className="inp" value={f.billingCycle} onChange={e => setF({ ...f, billingCycle: e.target.value })}>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-        </select>
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={onSave} className="bp">{saveLabel}</button>
-        <button onClick={onCancel} className="bg">Cancel</button>
-      </div>
-    </div>
-  );
 
   const shareCred = shareId ? creds.find(c => c.id === shareId) : null;
   const sharedIds: string[] = shareCred?.sharedWith ? JSON.parse(shareCred.sharedWith) : [];
@@ -127,7 +165,16 @@ export default function VaultClient({ members }: { members: any[] }) {
         </div>
       </div>
 
-      {showAdd && <CredForm f={form} setF={setForm} onSave={handleAdd} onCancel={() => setShowAdd(false)} saveLabel="Save Credential →" />}
+      {showAdd && (
+        <CredForm
+          f={form} setF={setForm}
+          onSave={handleAdd}
+          onCancel={() => setShowAdd(false)}
+          saveLabel="Save Credential →"
+          members={members}
+          savedEmails={savedEmails}
+        />
+      )}
 
       {/* Share Modal */}
       {shareId && shareCred && (
@@ -176,7 +223,14 @@ export default function VaultClient({ members }: { members: any[] }) {
           if (isEditing) return (
             <div key={c.id} style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>Editing: {c.toolName}</div>
-              <CredForm f={editForm} setF={setEditForm} onSave={() => handleEditSave(c.id)} onCancel={() => setEditId(null)} saveLabel="Save Changes" />
+              <CredForm
+                f={editForm} setF={setEditForm}
+                onSave={() => handleEditSave(c.id)}
+                onCancel={() => setEditId(null)}
+                saveLabel="Save Changes"
+                members={members}
+                savedEmails={savedEmails}
+              />
             </div>
           );
 

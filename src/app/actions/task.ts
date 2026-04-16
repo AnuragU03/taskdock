@@ -47,6 +47,8 @@ export async function createTask(formData: any) {
       type: type || 'assigned',
       assignedToId: hasAssignee ? assignedTo : null,
       createdById: (session.user as any).id,
+      isRecurring: formData.isRecurring || false,
+      recurringPattern: formData.recurringPattern || null,
       events: JSON.stringify(eventsList),
       comments: JSON.stringify([])
     }
@@ -131,7 +133,15 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
   return task;
 }
 
-export async function reviewTask(taskId: string, approved: boolean, fbText: string, score: number) {
+export async function reviewTask(
+  taskId: string,
+  approved: boolean,
+  fbText: string,
+  // 3-tier scores
+  completionScore: number,  // 0-30
+  qualityScore: number,     // 0-40
+  // productivityScore is auto-calculated server-side
+) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
   const userRole = (session.user as any).role;
@@ -140,42 +150,100 @@ export async function reviewTask(taskId: string, approved: boolean, fbText: stri
   const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
   const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
   
-  let productivity = null;
   const completedAt = new Date();
   
-  if (approved && taskObj?.pickedUpAt) {
+  // Auto-calculate productivity score (0-30) based on speed vs weight
+  let productivityScore = 15; // default mid
+  let productivity = null;
+  if (taskObj?.pickedUpAt) {
     let hours = (completedAt.getTime() - new Date(taskObj.pickedUpAt).getTime()) / (1000 * 60 * 60);
-    if (hours < 1) hours = 1; // Clamp to avoid infinity score
+    if (hours < 0.1) hours = 0.1;
     const w = taskObj?.weight || 5;
-    productivity = Number(((w * score) / hours).toFixed(2));
+    // Faster relative to task weight = higher productivity score
+    const expectedHours = w * 2; // baseline: weight*2 hours expected
+    const ratio = expectedHours / hours;
+    productivityScore = Math.min(30, Math.round(ratio * 15)); // cap at 30
+    if (approved) productivity = Number(((w * qualityScore) / hours).toFixed(2));
+  }
+
+  const totalScore = completionScore + qualityScore + productivityScore;
+  // Legacy adminScore: map totalScore/100 → /5
+  const adminScore = Math.round((totalScore / 100) * 5);
+
+  // Brownie conversion: totalScore * conversionRate from workspace
+  let brownieChange = 0;
+  if (approved && taskObj?.assignedToId) {
+    const workspace = await prisma.workspace.findFirst();
+    const rate = workspace?.brownieConversion ?? 0.1;
+    const isLate = taskObj.dueAt ? new Date() > new Date(taskObj.dueAt) : false;
+    brownieChange = isLate ? -1 : Math.round(totalScore * rate);
   }
 
   const data: any = {
     status: approved ? 'completed' : 'rejected',
     fbText,
-    adminScore: score,
+    adminScore,
+    completionScore,
+    qualityScore,
+    productivityScore,
+    totalScore,
     completedAt,
     ...(productivity !== null && { productivity }),
     events: JSON.stringify([
       ...existingEvents,
-      { id: `er${Date.now()}`, type: approved ? 'TASK_APPROVED' : 'TASK_REJECTED', label: approved ? `Approved by ${session.user.name} (Score: ${score}/5)` : `Rejected by ${session.user.name} (Score: ${score}/5)`, by: (session.user as any).id, at: new Date().toISOString() }
+      { id: `er${Date.now()}`, type: approved ? 'TASK_APPROVED' : 'TASK_REJECTED', label: approved ? `Approved by ${session.user.name} (Score: ${totalScore}/100)` : `Rejected by ${session.user.name} (Score: ${totalScore}/100)`, by: (session.user as any).id, at: new Date().toISOString() }
     ])
   };
 
   const task = await prisma.task.update({ where: { id: taskId }, data });
 
-  if (approved && taskObj?.assignedToId && taskObj.dueAt) {
-    const isLate = new Date() > new Date(taskObj.dueAt);
-    
-    // Award brownie point if completed before deadline, Penalize -1 if completed past deadline
+  if (approved && taskObj?.assignedToId && brownieChange !== 0) {
     await prisma.user.update({
       where: { id: taskObj.assignedToId },
-      data: { browniePoints: { increment: isLate ? -1 : 1 } }
+      data: { browniePoints: { increment: brownieChange } }
     });
   }
 
   revalidatePath('/');
   revalidatePath('/leaderboard');
+  revalidatePath(`/task/${taskId}`);
+  return task;
+}
+
+export async function abandonTask(taskId: string, reason: string, penalty: number) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error('Unauthorized');
+  const userRole = (session.user as any).role;
+  if (userRole !== 'admin' && userRole !== 'superadmin') throw new Error('Requires admin role');
+
+  const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
+  const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
+
+  const task = await prisma.task.update({
+    where: { id: taskId },
+    data: {
+      status: 'abandoned',
+      isAbandoned: true,
+      abandonedAt: new Date(),
+      abandonReason: reason,
+      abandonPenalty: penalty,
+      events: JSON.stringify([
+        ...existingEvents,
+        { id: `eab${Date.now()}`, type: 'TASK_ABANDONED', label: `Abandoned by ${session.user.name}${reason ? `: ${reason}` : ''}`, by: (session.user as any).id, at: new Date().toISOString() }
+      ])
+    }
+  });
+
+  // Apply brownie penalty if set
+  if (penalty > 0 && taskObj?.assignedToId) {
+    await prisma.user.update({
+      where: { id: taskObj.assignedToId },
+      data: { browniePoints: { increment: -penalty } }
+    });
+  }
+
+  revalidatePath('/');
+  revalidatePath('/open-queue');
   revalidatePath(`/task/${taskId}`);
   return task;
 }

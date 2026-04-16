@@ -69,9 +69,10 @@ model Workspace {
   id               String   @id @default(cuid())
   name             String
   slug             String   @unique
-  subscriptionPlan String   @default("Free")
-  defaultWorkHours Float    @default(8)
-  createdAt        DateTime @default(now())
+  subscriptionPlan  String   @default("Free")
+  defaultWorkHours  Float    @default(8)
+  brownieConversion Float    @default(0.1) // pts per totalScore point (e.g. 0.1 = 100 score → 10 brownie)
+  createdAt         DateTime @default(now())
 
   members          WorkspaceMember[]
   tasks            Task[]
@@ -103,19 +104,37 @@ model Task {
   category     String?
   priority     String   @default("medium")
   type         String   @default("assigned")
-  weight       Int      @default(5)      // 1-10 complexity/importance for productivity
-  dueAt        DateTime?
-  refLink      String?
-  subText      String?
-  subLink      String?
-  fbText       String?
-  adminScore   Int?     // Score given by admin out of 5
-  productivity Float?   // Derived: (weight * score) / hours
-  pickedUpAt   DateTime?  // when employee starts working
-  completedAt  DateTime?  // when admin approves/rejects
-  events       String?  // Stored as JSON string due to SQLite constraints
-  comments     String?  // Stored as JSON string
-  createdAt    DateTime @default(now())
+  weight          Int      @default(5)      // 1-10 complexity/importance for productivity
+  dueAt           DateTime?
+  refLink         String?
+  subText         String?
+  subLink         String?
+  fbText          String?
+  adminScore      Int?     // Legacy: Score given by admin out of 5 stars
+  productivity    Float?   // Derived: (weight * score) / hours
+  pickedUpAt      DateTime?  // when employee starts working
+  completedAt     DateTime?  // when admin approves/rejects
+
+  // 3-Tier Performance Scoring (out of 100 total)
+  completionScore  Int?  // 0-30: Did they fully complete the deliverables?
+  qualityScore     Int?  // 0-40: Super admin quality/review score
+  productivityScore Int? // 0-30: Speed vs complexity (auto-calculated)
+  totalScore       Int?  // 0-100: Sum of all three
+  scoreFeedback    String? // Narrative feedback from super admin
+
+  // Abandon / Skip workflow
+  isAbandoned     Boolean  @default(false)
+  abandonedAt     DateTime?
+  abandonReason   String?
+  abandonPenalty  Int      @default(0) // brownie penalty applied
+
+  // Recurring tasks
+  isRecurring      Boolean  @default(false)
+  recurringPattern String?  // "daily" | "weekly" | "biweekly" | "monthly"
+
+  events          String?  // Stored as JSON string due to SQLite constraints
+  comments        String?  // Stored as JSON string
+  createdAt       DateTime @default(now())
 
   assignedToId String?
   assignee   User?    @relation("AssignedTasks", fields: [assignedToId], references: [id])
