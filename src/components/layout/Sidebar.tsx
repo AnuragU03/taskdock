@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -20,6 +20,313 @@ interface SidebarProps {
   unreadNotifsCount: number;
   todayAttendance?: any;
   earnings?: { earned: number; total: number; multiplier?: number } | null;
+}
+
+interface MentionUser {
+  id: string;
+  name: string;
+  role: string;
+  color?: string;
+  initials?: string;
+}
+
+function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [mention, setMention] = useState('');
+  const [tagged, setTagged] = useState<MentionUser[]>([]);
+  const [suggestions, setSuggestions] = useState<MentionUser[]>([]);
+  const [allUsers, setAllUsers] = useState<MentionUser[]>([]);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch users on open
+  useEffect(() => {
+    if (!open || allUsers.length > 0) return;
+    fetch('/api/broadcast')
+      .then(r => r.json())
+      .then((users: MentionUser[]) => {
+        setAllUsers(users.filter(u => u.id !== currentUserId));
+      })
+      .catch(() => {});
+  }, [open, currentUserId, allUsers.length]);
+
+  // Filter suggestions as user types
+  useEffect(() => {
+    if (!mention.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const q = mention.toLowerCase();
+    const filtered = allUsers.filter(
+      u =>
+        u.name?.toLowerCase().includes(q) &&
+        !tagged.some(t => t.id === u.id)
+    );
+    setSuggestions(filtered.slice(0, 6));
+    setShowSuggestions(filtered.length > 0);
+  }, [mention, allUsers, tagged]);
+
+  const addTag = (user: MentionUser) => {
+    setTagged(prev => [...prev, user]);
+    setMention('');
+    setShowSuggestions(false);
+    textareaRef.current?.focus();
+  };
+
+  const removeTag = (id: string) => {
+    setTagged(prev => prev.filter(u => u.id !== id));
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() || tagged.length === 0) return;
+    setSending(true);
+    try {
+      const res = await fetch('/api/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim(), targetUserIds: tagged.map(u => u.id) }),
+      });
+      if (res.ok) {
+        setSent(true);
+        setMessage('');
+        setTagged([]);
+        setTimeout(() => setSent(false), 3000);
+      }
+    } catch {}
+    setSending(false);
+  };
+
+  return (
+    <div style={{ margin: '0 7px 6px' }}>
+      {/* Toggle button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '9px 12px',
+          borderRadius: 10,
+          border: '1px solid #F59E0B44',
+          background: open ? 'rgba(245,158,11,.08)' : 'transparent',
+          color: '#F59E0B',
+          fontFamily: 'var(--font-mono), sans-serif',
+          fontSize: 12,
+          cursor: 'pointer',
+          transition: 'all .15s',
+          letterSpacing: '.04em',
+          textTransform: 'uppercase',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(245,158,11,.1)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = open ? 'rgba(245,158,11,.08)' : 'transparent'; }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ fontSize: 14 }}>📢</span>
+          Broadcast
+        </span>
+        <span style={{ fontSize: 10, opacity: 0.7 }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {/* Panel */}
+      {open && (
+        <div
+          style={{
+            marginTop: 8,
+            background: 'linear-gradient(135deg, #120D00, #1A1200)',
+            border: '1px solid #F59E0B33',
+            borderRadius: 12,
+            padding: 12,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 9,
+          }}
+        >
+          {/* Tagged users */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, minHeight: 24 }}>
+            {tagged.map(u => (
+              <span
+                key={u.id}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(245,158,11,.15)',
+                  border: '1px solid #F59E0B55',
+                  borderRadius: 20,
+                  padding: '2px 8px 2px 6px',
+                  fontSize: 11,
+                  color: '#F59E0B',
+                  fontFamily: 'var(--font-mono), monospace',
+                }}
+              >
+                <span
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    background: u.color || '#F59E0B',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 8,
+                    color: '#fff',
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}
+                >
+                  {u.initials || u.name?.[0]?.toUpperCase() || '?'}
+                </span>
+                @{u.name?.split(' ')[0]}
+                <button
+                  onClick={() => removeTag(u.id)}
+                  style={{ background: 'none', border: 'none', color: '#F59E0B', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* @mention input */}
+          <div style={{ position: 'relative' }}>
+            <input
+              placeholder="@mention someone..."
+              value={mention}
+              onChange={e => setMention(e.target.value)}
+              onFocus={() => { if (suggestions.length) setShowSuggestions(true); }}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              style={{
+                width: '100%',
+                background: 'rgba(245,158,11,.06)',
+                border: '1px solid #F59E0B33',
+                borderRadius: 8,
+                padding: '7px 10px',
+                fontSize: 12,
+                fontFamily: 'var(--font-mono), monospace',
+                color: '#F59E0B',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            {showSuggestions && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#1A1200',
+                  border: '1px solid #F59E0B44',
+                  borderRadius: 8,
+                  zIndex: 999,
+                  marginTop: 3,
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 24px rgba(0,0,0,.5)',
+                }}
+              >
+                {suggestions.map(u => (
+                  <div
+                    key={u.id}
+                    onMouseDown={() => addTag(u)}
+                    style={{
+                      padding: '7px 10px',
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono), monospace',
+                      color: '#F59E0B',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      borderBottom: '1px solid #F59E0B22',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(245,158,11,.1)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    <span
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        background: u.color || '#F59E0B',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 9,
+                        color: '#fff',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {u.initials || u.name?.[0]?.toUpperCase() || '?'}
+                    </span>
+                    {u.name}
+                    <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 'auto' }}>{u.role}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Message textarea */}
+          <textarea
+            ref={textareaRef}
+            placeholder="Type your message..."
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            rows={3}
+            style={{
+              width: '100%',
+              background: 'rgba(245,158,11,.06)',
+              border: '1px solid #F59E0B33',
+              borderRadius: 8,
+              padding: '8px 10px',
+              fontSize: 12,
+              fontFamily: 'var(--font-sans), sans-serif',
+              color: 'var(--t1)',
+              outline: 'none',
+              resize: 'none',
+              boxSizing: 'border-box',
+              lineHeight: 1.5,
+            }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#F59E0B88'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = '#F59E0B33'; }}
+          />
+
+          {/* Send button */}
+          {sent ? (
+            <div style={{ textAlign: 'center', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', padding: '6px 0' }}>
+              ✓ Broadcast sent!
+            </div>
+          ) : (
+            <button
+              onClick={handleSend}
+              disabled={sending || !message.trim() || tagged.length === 0}
+              style={{
+                width: '100%',
+                padding: '9px 0',
+                borderRadius: 8,
+                border: 'none',
+                cursor: sending || !message.trim() || tagged.length === 0 ? 'not-allowed' : 'pointer',
+                background: sending || !message.trim() || tagged.length === 0 ? '#F59E0B44' : '#F59E0B',
+                color: sending || !message.trim() || tagged.length === 0 ? '#F59E0B88' : '#000',
+                fontFamily: 'var(--font-sans), sans-serif',
+                fontWeight: 700,
+                fontSize: 13,
+                transition: 'all .15s',
+              }}
+            >
+              {sending ? '◌ Sending…' : '📢 Send Broadcast →'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: SidebarProps) => {
@@ -143,6 +450,11 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
         })}
       </nav>
       
+      {/* BROADCAST PANEL — admin/superadmin only */}
+      {isAdmin && (
+        <BroadcastPanel currentUserId={user.id} />
+      )}
+
       {/* EARNINGS PROGRESS BAR */}
       {earnings && earnings.total > 0 && (
         <div style={{ margin: '0 7px 4px', padding: '10px 12px', background: 'linear-gradient(135deg,#0D1A24,#0A1420)', border: '1px solid var(--blue)44', borderRadius: 12 }}>

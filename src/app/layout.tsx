@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 
 import { Topbar } from "@/components/layout/Topbar";
 import { NotifPatti } from "@/components/layout/NotifPatti";
+import { LiveToast } from "@/components/ui/LiveToast";
+import { checkAndSendRenewalReminders } from "@/lib/reminders";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
 const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
@@ -86,6 +88,15 @@ export default async function RootLayout({
       }
       earnings = { earned: Math.round(earned), total: Math.round(profile.monthlySalary), multiplier: Number(prodMultiplier.toFixed(2)) };
     }
+
+    // Renewal reminders — only for admin/superadmin, silently
+    const userRole = (session.user as any).role;
+    if (userRole === 'admin' || userRole === 'superadmin') {
+      const ws = await prisma.workspace.findFirst();
+      if (ws) {
+        await checkAndSendRenewalReminders(userId, ws.id);
+      }
+    }
   }
 
   return (
@@ -111,6 +122,7 @@ export default async function RootLayout({
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <Topbar user={session.user} />
                 <NotifPatti initialCount={unreadNotifsCount} />
+                <LiveToast />
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                   {children}
                 </div>

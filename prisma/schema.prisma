@@ -153,6 +153,7 @@ model Notification {
   text        String
   type        String
   read        Boolean  @default(false)
+  metadata    String?  // JSON: { targetUserIds, acknowledgedBy, broadcastId, response }
   createdAt   DateTime @default(now())
   
   taskId      String?
@@ -207,6 +208,8 @@ model Credential {
   billingCycle String  @default("monthly")  // "monthly" | "yearly"
   sharedWith   String? // JSON array of user IDs
   notes       String?
+  reminder4dAt DateTime?  // last time 4-day renewal reminder was sent (dedup window: 20h)
+  reminder1dAt DateTime?  // last time 1-day renewal reminder was sent (dedup window: 20h)
   createdAt   DateTime @default(now())
 }
 

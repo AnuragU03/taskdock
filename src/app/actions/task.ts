@@ -54,6 +54,25 @@ export async function createTask(formData: any) {
     }
   });
 
+  // If open queue post (no assignee) — notify all users
+  if (!hasAssignee) {
+    try {
+      const allUsers = await prisma.user.findMany({ select: { id: true } });
+      const otherUsers = allUsers.filter(u => u.id !== (session.user as any).id);
+      if (otherUsers.length > 0) {
+        await prisma.notification.createMany({
+          data: otherUsers.map((u) => ({
+            workspaceId: workspace!.id,
+            userId: u.id,
+            text: `◈ New task in Open Queue: "${title}" — pick it up if it's yours!`,
+            type: 'OPEN_QUEUE_POST',
+            taskId: task.id,
+          })),
+        });
+      }
+    } catch { /* silent */ }
+  }
+
   revalidatePath('/');
   revalidatePath('/open-queue');
   return task;
@@ -102,6 +121,22 @@ export async function pickupTask(taskId: string) {
     }
   });
 
+  // Notify the task creator that someone picked up the task
+  try {
+    const workspace = await prisma.workspace.findFirst();
+    if (workspace && taskObj?.createdById) {
+      await prisma.notification.create({
+        data: {
+          workspaceId: workspace.id,
+          userId: taskObj.createdById,
+          text: `⊙ ${session.user.name ?? 'Someone'} picked up "${taskObj?.title ?? 'a task'}" from the open queue.`,
+          type: 'TASK_PICKED_UP',
+          taskId,
+        },
+      });
+    }
+  } catch { /* silent */ }
+
   revalidatePath('/');
   revalidatePath('/open-queue');
   revalidatePath(`/task/${taskId}`);
@@ -127,6 +162,28 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
       ])
     }
   });
+
+  // Notify all admins and superadmins that work has been submitted
+  try {
+    const workspace = await prisma.workspace.findFirst();
+    if (workspace) {
+      const admins = await prisma.user.findMany({
+        where: { role: { in: ['admin', 'superadmin'] } },
+        select: { id: true },
+      });
+      if (admins.length > 0) {
+        await prisma.notification.createMany({
+          data: admins.map((a) => ({
+            workspaceId: workspace.id,
+            userId: a.id,
+            text: `↑ ${session.user.name ?? 'Someone'} submitted work on "${taskObj?.title ?? 'a task'}" — ready for your review.`,
+            type: 'TASK_SUBMITTED',
+            taskId,
+          })),
+        });
+      }
+    }
+  } catch { /* notification failure must not break task submission */ }
 
   revalidatePath('/');
   revalidatePath(`/task/${taskId}`);

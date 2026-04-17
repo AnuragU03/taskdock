@@ -10,6 +10,7 @@ interface Notif {
   read: boolean;
   createdAt: string;
   taskId?: string | null;
+  metadata?: string | null;
 }
 
 const TYPE_ICON: Record<string, string> = {
@@ -21,6 +22,10 @@ const TYPE_ICON: Record<string, string> = {
   TASK_REOPENED: '↺',
   TASK_PICKED_UP: '⊙',
   TASK_REMINDER: '◷',
+  BROADCAST: '📢',
+  BROADCAST_ACK: '✓',
+  OPEN_QUEUE_POST: '◈',
+  PAYMENT_REMINDER: '⊘',
   DEFAULT: '⚐',
 };
 
@@ -32,6 +37,10 @@ const TYPE_COLOR: Record<string, string> = {
   TASK_SUBMITTED: 'var(--accent)',
   TASK_REOPENED: 'var(--amber)',
   TASK_REMINDER: 'var(--amber)',
+  BROADCAST: '#F59E0B',
+  BROADCAST_ACK: 'var(--green)',
+  OPEN_QUEUE_POST: '#14B8A6',
+  PAYMENT_REMINDER: 'var(--red)',
   DEFAULT: 'var(--t3)',
 };
 
@@ -55,6 +64,16 @@ async function markRead(ids: string[]) {
   } catch {}
 }
 
+async function ackBroadcast(notifId: string, response: 'yes' | 'no') {
+  try {
+    await fetch(`/api/broadcast/${notifId}/ack`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ response }),
+    });
+  } catch {}
+}
+
 export function NotifPatti({ initialCount }: { initialCount: number }) {
   const router = useRouter();
   const [notifs, setNotifs] = useState<Notif[]>([]);
@@ -62,6 +81,7 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
   const [dismissed, setDismissed] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [ackedIds, setAckedIds] = useState<Set<string>>(new Set());
   const tickTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -72,22 +92,18 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
       setVisible(true);
       setDismissed(false);
     } else if (notifs.length > 0) {
-      // All read externally, hide
       setNotifs([]);
       setVisible(false);
     }
   }, [notifs.length]);
 
-  // Initial load
   useEffect(() => { load(); }, []);
 
-  // Poll every 30s for new notifications
   useEffect(() => {
     pollTimer.current = setInterval(load, 30000);
     return () => { if (pollTimer.current) clearInterval(pollTimer.current); };
   }, [load]);
 
-  // Ticker: rotate through unread notifs
   useEffect(() => {
     if (!visible || expanded || notifs.length <= 1) return;
     tickTimer.current = setInterval(() => {
@@ -109,11 +125,45 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
     else router.push('/notifications');
   };
 
+  const handleAck = async (n: Notif, response: 'yes' | 'no') => {
+    setAckedIds(prev => new Set([...prev, n.id]));
+    await ackBroadcast(n.id, response);
+    await markRead([n.id]);
+    load();
+  };
+
   if (!visible || dismissed || notifs.length === 0) return null;
 
   const current = notifs[activeIdx] ?? notifs[0];
   const color = TYPE_COLOR[current.type] ?? TYPE_COLOR.DEFAULT;
   const icon = TYPE_ICON[current.type] ?? TYPE_ICON.DEFAULT;
+
+  const BroadcastActions = ({ n, color }: { n: Notif; color: string }) => {
+    const isAcked = ackedIds.has(n.id);
+    if (isAcked) {
+      return (
+        <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', padding: '2px 8px', border: '1px solid var(--green)44', borderRadius: 6 }}>
+          ✓ Acknowledged
+        </span>
+      );
+    }
+    return (
+      <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleAck(n, 'yes'); }}
+          style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.4)', color: '#22C55E', padding: '2px 10px', borderRadius: 6, cursor: 'pointer' }}
+        >
+          ✓ Yes
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleAck(n, 'no'); }}
+          style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.4)', color: '#EF4444', padding: '2px 10px', borderRadius: 6, cursor: 'pointer' }}
+        >
+          ✕ No
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -152,6 +202,11 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
             {current.text}
           </span>
 
+          {/* Inline Yes/No for BROADCAST in collapsed state */}
+          {current.type === 'BROADCAST' && (
+            <BroadcastActions n={current} color={color} />
+          )}
+
           {/* Count badge */}
           {notifs.length > 1 && (
             <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', background: `${color}22`, color, border: `1px solid ${color}44`, borderRadius: 100, padding: '1px 7px', flexShrink: 0 }}>
@@ -178,7 +233,7 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
         </div>
       ) : (
         /* ── Expanded list ── */
-        <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 320, overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px 6px', borderBottom: '1px solid var(--border)' }}>
             <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
               {notifs.length} unread notification{notifs.length !== 1 ? 's' : ''}
@@ -194,19 +249,25 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
             return (
               <div
                 key={n.id}
-                onClick={() => goToTask(n)}
+                onClick={() => n.type !== 'BROADCAST' && goToTask(n)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px',
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
                   borderBottom: i < notifs.length - 1 ? '1px solid var(--border)' : 'none',
-                  cursor: n.taskId ? 'pointer' : 'default',
+                  cursor: n.taskId && n.type !== 'BROADCAST' ? 'pointer' : 'default',
                   background: i === activeIdx ? `${c}08` : 'transparent',
                   transition: 'background .15s',
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${c}10`; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = i === activeIdx ? `${c}08` : 'transparent'; }}
               >
-                <span style={{ fontSize: 12, color: c, fontFamily: 'var(--font-mono), monospace', flexShrink: 0 }}>{ic}</span>
+                <span style={{ fontSize: 14, color: c, fontFamily: 'var(--font-mono), monospace', flexShrink: 0 }}>{ic}</span>
                 <span style={{ fontSize: 13, color: 'var(--t2)', flex: 1, fontFamily: 'var(--font-sans), sans-serif' }}>{n.text}</span>
+
+                {/* Yes / No for broadcast */}
+                {n.type === 'BROADCAST' && (
+                  <BroadcastActions n={n} color={c} />
+                )}
+
                 <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', flexShrink: 0 }}>
                   {(() => {
                     const m = Math.floor((Date.now() - new Date(n.createdAt).getTime()) / 60000);
