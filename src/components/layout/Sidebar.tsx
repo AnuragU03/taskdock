@@ -112,9 +112,9 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
           justifyContent: 'space-between',
           padding: '9px 12px',
           borderRadius: 10,
-          border: '1px solid #F59E0B44',
-          background: open ? 'rgba(245,158,11,.08)' : 'transparent',
-          color: '#F59E0B',
+          border: '1px solid rgba(251,191,36,.3)',
+          background: open ? 'var(--amber-bg)' : 'transparent',
+          color: 'var(--amber)',
           fontFamily: 'var(--font-mono), sans-serif',
           fontSize: 12,
           cursor: 'pointer',
@@ -122,11 +122,11 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
           letterSpacing: '.04em',
           textTransform: 'uppercase',
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(245,158,11,.1)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = open ? 'rgba(245,158,11,.08)' : 'transparent'; }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,.1)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = open ? 'var(--amber-bg)' : 'transparent'; }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 14 }}>📢</span>
+          <span style={{ fontSize: 14 }}>⊛</span>
           Broadcast
         </span>
         <span style={{ fontSize: 10, opacity: 0.7 }}>{open ? '▲' : '▼'}</span>
@@ -320,7 +320,7 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
                 transition: 'all .15s',
               }}
             >
-              {sending ? '◌ Sending…' : '📢 Send Broadcast →'}
+              {sending ? '◌ Sending…' : '⊛ Send Broadcast →'}
             </button>
           )}
         </div>

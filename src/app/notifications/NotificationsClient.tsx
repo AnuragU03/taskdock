@@ -20,7 +20,8 @@ const TYPE_COLOR: Record<string, string> = {
   TASK_SUBMITTED: "var(--accent)",
   TASK_REOPENED: "var(--amber)",
   TASK_REMINDER: "var(--amber)",
-  BROADCAST: "#F59E0B",
+  TASK_PICKED_UP: "var(--t3)",
+  BROADCAST: "var(--amber)",
   BROADCAST_ACK: "var(--green)",
   OPEN_QUEUE_POST: "#14B8A6",
   PAYMENT_REMINDER: "var(--red)",
@@ -36,8 +37,8 @@ const TYPE_ICON: Record<string, string> = {
   TASK_REOPENED: "↺",
   TASK_PICKED_UP: "⊙",
   TASK_REMINDER: "◷",
-  BROADCAST: "📢",
-  BROADCAST_ACK: "✓",
+  BROADCAST: "⊛",
+  BROADCAST_ACK: "◎",
   OPEN_QUEUE_POST: "◈",
   PAYMENT_REMINDER: "⊘",
   DEFAULT: "⚐",
@@ -109,6 +110,102 @@ function BroadcastRow({ notif }: { notif: Notif }) {
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+function RenewRow({ notif, meta }: { notif: Notif; meta: any }) {
+  const [status, setStatus] = useState<"idle" | "renewed" | "loading">("idle");
+  const [newDate, setNewDate] = useState<string | null>(null);
+
+  const handleRenew = async () => {
+    setStatus("loading");
+    try {
+      const res = await fetch(`/api/credentials/${meta.credentialId}/renew`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notifId: notif.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNewDate(data.newRenewalDate);
+        setStatus("renewed");
+      } else {
+        setStatus("idle");
+      }
+    } catch {
+      setStatus("idle");
+    }
+  };
+
+  if (status === "renewed") {
+    return (
+      <div
+        style={{
+          marginTop: 10,
+          fontSize: 12,
+          fontFamily: "var(--font-mono), monospace",
+          color: "var(--green)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <span>✓ Marked as renewed</span>
+        {newDate && (
+          <span style={{ color: "var(--t3)" }}>
+            → next renewal: <strong style={{ color: "var(--t1)" }}>{newDate}</strong>
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <span style={{ fontSize: 12, fontFamily: "var(--font-mono), monospace", color: "var(--t3)" }}>
+        Has this been paid?
+      </span>
+      <button
+        onClick={handleRenew}
+        disabled={status === "loading"}
+        style={{
+          fontSize: 12,
+          fontFamily: "var(--font-mono), monospace",
+          background: "rgba(34,197,94,.12)",
+          border: "1px solid rgba(34,197,94,.4)",
+          color: "#22C55E",
+          padding: "4px 14px",
+          borderRadius: 6,
+          cursor: status === "loading" ? "not-allowed" : "pointer",
+        }}
+      >
+        {status === "loading" ? "◌ Updating…" : "✓ Yes, Renewed"}
+      </button>
+      <button
+        onClick={async () => {
+          // Just mark read, don't renew
+          await fetch(`/api/notifications/unread`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: [notif.id] }),
+          }).catch(() => {});
+          setStatus("renewed");
+          setNewDate(null);
+        }}
+        style={{
+          fontSize: 12,
+          fontFamily: "var(--font-mono), monospace",
+          background: "transparent",
+          border: "1px solid var(--border)",
+          color: "var(--t4)",
+          padding: "4px 14px",
+          borderRadius: 6,
+          cursor: "pointer",
+        }}
+      >
+        ✕ Not yet
+      </button>
     </div>
   );
 }
@@ -258,6 +355,9 @@ export default function NotificationsClient({ notifs }: { notifs: Notif[] }) {
                     </div>
                   </div>
                 )}
+
+                {/* Renew action for PAYMENT_REMINDER */}
+                {n.type === "PAYMENT_REMINDER" && <RenewRow notif={n} meta={m} />}
 
                 {/* Broadcast Yes/No acknowledge */}
                 {n.type === "BROADCAST" && <BroadcastRow notif={n} />}

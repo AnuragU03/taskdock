@@ -88,3 +88,49 @@ export async function deleteCredential(id: string) {
   revalidatePath('/vault');
   return true;
 }
+
+// Called when admin confirms payment was made — auto-advances renewalDate
+// and clears reminder timestamps so the next cycle gets fresh alerts
+export async function markCredentialRenewed(credentialId: string, notifId?: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error("Unauthorized");
+  assertAdmin((session.user as any).role);
+
+  const cred = await prisma.credential.findUnique({ where: { id: credentialId } });
+  if (!cred) throw new Error("Credential not found");
+
+  let newRenewalDate = cred.renewalDate;
+
+  if (cred.renewalDate) {
+    const current = new Date(cred.renewalDate);
+    if (cred.billingCycle === 'yearly') {
+      current.setFullYear(current.getFullYear() + 1);
+    } else {
+      // monthly (default)
+      current.setMonth(current.getMonth() + 1);
+    }
+    // Format as YYYY-MM-DD
+    newRenewalDate = current.toISOString().split('T')[0];
+  }
+
+  await prisma.credential.update({
+    where: { id: credentialId },
+    data: {
+      renewalDate: newRenewalDate,
+      reminder4dAt: null,  // reset so next cycle gets fresh reminders
+      reminder1dAt: null,
+    },
+  });
+
+  // Mark the notification as read if provided
+  if (notifId) {
+    await prisma.notification.update({
+      where: { id: notifId },
+      data: { read: true },
+    }).catch(() => {}); // silent if notif already gone
+  }
+
+  revalidatePath('/vault');
+  revalidatePath('/notifications');
+  return { ok: true, newRenewalDate };
+}

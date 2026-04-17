@@ -17,7 +17,7 @@ const TYPE_COLOR: Record<string, string> = {
 
 const TYPE_ICON: Record<string, string> = {
   OPEN_QUEUE_POST: "◈",
-  BROADCAST: "📢",
+  BROADCAST: "⊛",
   DEFAULT: "⚐",
 };
 
