@@ -405,6 +405,7 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
             </div>
           )}
         </div>
+      )}
 
       {activeTab === 'settings' && (
         <div style={{ maxWidth: 500 }}>

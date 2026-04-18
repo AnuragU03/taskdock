@@ -107,13 +107,13 @@ export default async function RootLayout({
             <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg0)' }}>
               <Sidebar 
                  user={{
-                   id: (session.user as any).id as string,
-                   name: session.user.name as string,
-                   email: session.user.email as string,
-                   role: (session.user as any).role || 'employee',
-                   image: session.user.image,
-                   color: (session.user as any).color,
-                   browniePoints: (session.user as any).browniePoints || 0
+                   id: (session.user as any)?.id as string,
+                   name: session.user?.name as string,
+                   email: session.user?.email as string,
+                   role: (session.user as any)?.role || 'employee',
+                   image: session.user?.image,
+                   color: (session.user as any)?.color,
+                   browniePoints: (session.user as any)?.browniePoints || 0
                  }}
                  unreadNotifsCount={unreadNotifsCount}
                  todayAttendance={todayAttendance}

@@ -177,7 +177,7 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
           data: admins.map((a) => ({
             workspaceId: workspace.id,
             userId: a.id,
-            text: `↑ ${session.user.name ?? 'Someone'} submitted work on "${taskObj?.title ?? 'a task'}" — ready for your review.`,
+            text: `↑ ${session?.user?.name ?? 'Someone'} submitted work on "${taskObj?.title ?? 'a task'}" — ready for your review.`,
             type: 'TASK_SUBMITTED',
             taskId,
           })),

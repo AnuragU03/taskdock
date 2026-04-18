@@ -28,6 +28,7 @@ interface TaskProps {
   subText?: string | null;
   subLink?: string | null;
   comments?: any[];
+  events?: string | null;
 }
 
 export const getUrgency = (cd: any) => {

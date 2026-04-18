@@ -329,6 +329,32 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
   );
 }
 
+function EmployeeBroadcasts() {
+  const [active, setActive] = useState<any[]>([]);
+  
+  useEffect(() => {
+    fetch('/api/broadcast/active')
+      .then(r => r.json())
+      .then(data => setActive(data))
+      .catch(() => {});
+  }, []);
+
+  if (active.length === 0) return null;
+
+  return (
+    <div style={{ margin: '0 7px 12px', padding: '12px', background: 'linear-gradient(135deg,#1E1B4B,#111827)', border: '1px solid #4338CA', borderRadius: 12 }}>
+      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: '#818CF8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Active Broadcasts</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {active.map(b => (
+          <div key={b.id} style={{ fontSize: 12, color: '#E0E7FF', lineHeight: 1.5, paddingLeft: 8, borderLeft: '2px solid #6366F1' }}>
+            {b.message}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
