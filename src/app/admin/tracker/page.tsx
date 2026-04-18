@@ -4,14 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TrackerGrid from "./TrackerGrid";
+import Link from 'next/link';
 
-export default async function AdminTrackerPage() {
+export default async function AdminTrackerPage({ searchParams }: { searchParams: Promise<{ month?: string; year?: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user || !['admin','superadmin'].includes((session.user as any).role)) redirect('/');
 
+  const sParams = await searchParams;
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth() + 1;
+  const year = Number(sParams.year) || today.getFullYear();
+  const month = Number(sParams.month) || (today.getMonth() + 1);
 
   const users = await prisma.user.findMany({
     where: { role: { not: 'superadmin' } }, // Optional: exclude superadmin from tracking if needed
@@ -127,9 +129,30 @@ export default async function AdminTrackerPage() {
       </div>
       
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 5 }}>
-        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mName, idx) => (
-           <span key={mName} style={{ padding: '6px 14px', background: (idx + 1) === month ? 'var(--accent)' : 'var(--bg2)', color: (idx + 1) === month ? '#000' : 'var(--t3)', borderRadius: 20, fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, cursor: 'default' }}>{mName}</span>
-        ))}
+        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mName, idx) => {
+           const active = (idx + 1) === month;
+           return (
+             <Link 
+               key={mName} 
+               href={`/admin/tracker?month=${idx + 1}&year=${year}`}
+               style={{ 
+                 padding: '6px 14px', 
+                 background: active ? 'var(--accent)' : 'var(--bg2)', 
+                 color: active ? '#000' : 'var(--t2)', 
+                 borderRadius: 20, 
+                 fontSize: 13, 
+                 fontFamily: 'var(--font-sans), sans-serif', 
+                 fontWeight: 700, 
+                 cursor: 'pointer',
+                 textDecoration: 'none',
+                 transition: 'all .1s',
+                 border: active ? 'none' : '1px solid var(--border)'
+               }}
+             >
+               {mName}
+             </Link>
+           );
+        })}
       </div>
 
       <TrackerGrid users={usersMapped} days={days} year={year} month={month} />

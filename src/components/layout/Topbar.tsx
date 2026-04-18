@@ -37,7 +37,7 @@ export const Topbar = ({ user, unreadNotifsCount = 0 }: { user: any, unreadNotif
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <Link href="/notifications" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '50%', background: 'var(--bg1)', border: '1px solid var(--border)', textDecoration: 'none', color: 'var(--t2)', transition: 'all .15s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = 'var(--t2)'}>
-          <span style={{ fontSize: 16 }}>⚐</span>
+          <span style={{ fontSize: 18 }}>🔔</span>
           {unreadNotifsCount > 0 && (
             <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--accent)', color: '#fff', fontSize: 10, borderRadius: 10, padding: '1px 5px', fontFamily: 'var(--font-mono), monospace', minWidth: 14, textAlign: 'center', border: '2px solid var(--bg0)' }}>
               {unreadNotifsCount}

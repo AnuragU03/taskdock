@@ -11,7 +11,6 @@ export const SC: Record<string, { l: string; bg: string; tc: string }> = {
   rejected:    {l:'Rejected',    bg:'var(--red-bg)',  tc:'var(--red)'},
   reopened:    {l:'Reopened',    bg:'var(--amber-bg)',tc:'var(--amber)'},
   cancelled:   {l:'Cancelled',   bg:'var(--bg3)',     tc:'var(--t3)'},
-  abandoned:   {l:'Abandoned',   bg:'#2F1F1F',        tc:'#FCA5A5'},
   overdue:     {l:'Overdue',     bg:'var(--red-bg)',  tc:'var(--red)'},
 };
 
@@ -43,6 +42,5 @@ export const KCOLS = [
   {id:'in_progress',l:'In Progress'},
   {id:'under_review',l:'In Review'},
   {id:'submitted',l:'Submitted'},
-  {id:'abandoned',l:'Abandoned'},
   {id:'completed',l:'Done'}
 ];

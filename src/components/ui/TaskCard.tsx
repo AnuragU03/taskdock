@@ -142,20 +142,7 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
     </div>
   );
 
-  if (task.status === 'abandoned') return (
-    <div style={{ padding: '16px', background: '#251616', borderRadius: '13px 13px 0 0', borderBottom: '1px solid #4a2b2b', minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', right: -18, top: -18, width: 80, height: 80, borderRadius: '50%', background: '#FCA5A5', opacity: .04 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#4A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#FCA5A5', flexShrink: 0, border: `3px solid #7F3A3A` }}>⊘</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#FCA5A5', letterSpacing: '-.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Abandoned</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
-            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'rgba(252,165,165,.7)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Needs reassignment</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+
 
   if (isUnpicked) return (
     <div style={{ padding: '16px', background: 'linear-gradient(135deg,#1A0D2E,#0D0820)', borderRadius: '13px 13px 0 0', borderBottom: '1px solid #5B21B6', minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
@@ -258,8 +245,6 @@ export const TCard = ({ task, onClick, compact = false }: { task: TaskProps; onC
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 7, borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
           {task.status === 'submitted' ? (
              <span style={{ background: '#F59E0B', color: '#111', padding: '4px 10px', borderRadius: 6, fontSize: 13, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, letterSpacing: '.03em', textTransform: 'uppercase' }}>SUBMITTED</span>
-          ) : task.status === 'abandoned' ? (
-             <span style={{ background: 'rgba(252,165,165,.15)', color: '#FCA5A5', border: '1px solid rgba(252,165,165,.3)', padding: '4px 10px', borderRadius: 6, fontSize: 13, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, letterSpacing: '.03em', textTransform: 'uppercase' }}>ABANDONED</span>
           ) : (
             <SPill status={task.status} />
           )}

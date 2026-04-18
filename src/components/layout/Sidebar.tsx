@@ -342,11 +342,11 @@ function EmployeeBroadcasts() {
   if (active.length === 0) return null;
 
   return (
-    <div style={{ margin: '0 7px 12px', padding: '12px', background: 'linear-gradient(135deg,#1E1B4B,#111827)', border: '1px solid #4338CA', borderRadius: 12 }}>
-      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: '#818CF8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Active Broadcasts</div>
+    <div style={{ margin: '0 7px 12px', padding: '12px', background: 'linear-gradient(135deg,#0F172A,#020617)', border: '1px solid var(--accent-dim)', borderRadius: 12 }}>
+      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Active Broadcasts</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {active.map(b => (
-          <div key={b.id} style={{ fontSize: 12, color: '#E0E7FF', lineHeight: 1.5, paddingLeft: 8, borderLeft: '2px solid #6366F1' }}>
+          <div key={b.id} style={{ fontSize: 13, color: 'var(--t2)', lineHeight: 1.5, paddingLeft: 8, borderLeft: '2px solid var(--accent)' }}>
             {b.message}
           </div>
         ))}
@@ -391,7 +391,6 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/productivity', l: 'Productivity', ic: '◱' },
     ...( isAdmin ? [
       { id: '/admin/tracker', l: 'Activity Tracker', ic: '◫' },
-      { id: '/import', l: 'Bulk Import', ic: '⇪' },
       { id: '/vault', l: 'Credential Locker', ic: '⎔' },
       { id: '/admin', l: 'Admin Settings', ic: '⬡' }
     ] : [])

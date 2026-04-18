@@ -5,14 +5,14 @@
 :root {
   --bg0:#0C0B0A;--bg1:#131211;--bg2:#1A1917;--bg3:#222120;--bg4:#2A2927;
   --border:#2E2C2A;--border2:#3A3836;
-  --t1:#EAE6E1;--t2:#9A9590;--t3:#5A5754;--t4:#3A3836;
+  --t1:#FFFFFF;--t2:#D1D5DB;--t3:#9CA3AF;--t4:#6B7280;
   --accent:#FF4F00;--accent-dim:#2A1208;
   --green:#34D399;--green-bg:#071A10;
   --red:#F87171;--red-bg:#1C0808;
   --amber:#FBBF24;--amber-bg:#1A1304;
   --blue:#60A5FA;--blue-bg:#08111E;
   --teal:#14B8A6;--teal-bg:#042F2E;
-  --fs-xs:11px;--fs-sm:13px;--fs-base:15px;--fs-md:17px;--fs-lg:20px;--fs-xl:24px;--fs-2xl:30px;
+  --fs-xs:12px;--fs-sm:14px;--fs-base:15px;--fs-md:17px;--fs-lg:20px;--fs-xl:24px;--fs-2xl:30px;
 }
 
 body {
