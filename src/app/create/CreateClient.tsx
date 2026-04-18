@@ -12,7 +12,7 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
   const router = useRouter();
   const isAdmin = user.role?.toLowerCase() === 'admin';
   const isEmployee = user.role?.toLowerCase() === 'employee' || !user.role;
-  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '', weight: 5, isRecurring: false, recurringPattern: 'weekly' });
+  const [f, setF] = useState({ title: '', desc: '', type: isEmployee ? 'open' : 'assigned', priority: 'medium', category: 'Design', dueAt: '', assignedTo: '', refLink: '', weight: 5, isRecurring: false, recurringPattern: 'weekly', recurringTime: '09:00' });
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -142,23 +142,29 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
               <span style={{ fontSize: 12, color: 'var(--t4)' }}>Auto-repeat this task on a schedule</span>
             </div>
             {f.isRecurring && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {['daily', 'weekly', 'biweekly', 'monthly'].map(p => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => set('recurringPattern', p)}
-                    style={{
-                      padding: '5px 12px', borderRadius: 120,
-                      border: `1px solid ${f.recurringPattern === p ? 'var(--accent)' : 'var(--border)'}`,
-                      background: f.recurringPattern === p ? 'var(--accent-dim)' : 'var(--bg2)',
-                      color: f.recurringPattern === p ? 'var(--accent)' : 'var(--t3)',
-                      fontSize: 12, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize'
-                    }}
-                  >
-                    ↺ {p}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['daily', 'weekly', 'biweekly', 'monthly'].map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => set('recurringPattern', p)}
+                      style={{
+                        padding: '5px 12px', borderRadius: 120,
+                        border: `1px solid ${f.recurringPattern === p ? 'var(--accent)' : 'var(--border)'}`,
+                        background: f.recurringPattern === p ? 'var(--accent-dim)' : 'var(--bg2)',
+                        color: f.recurringPattern === p ? 'var(--accent)' : 'var(--t3)',
+                        fontSize: 12, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize'
+                      }}
+                    >
+                      ↺ {p}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                   <label style={{ fontSize: 13, color: 'var(--t2)' }}>Creation Time:</label>
+                   <input type="time" className="inp" value={f.recurringTime} onChange={e => set('recurringTime', e.target.value)} style={{ width: 120, padding: '4px 8px' }} />
+                </div>
               </div>
             )}
           </div>

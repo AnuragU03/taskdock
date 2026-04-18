@@ -120,7 +120,7 @@ export default async function RootLayout({
                  earnings={earnings}
               />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                <Topbar user={session.user} />
+                <Topbar user={session.user} unreadNotifsCount={unreadNotifsCount} />
                 <NotifPatti initialCount={unreadNotifsCount} />
                 <LiveToast />
                 <div style={{ flex: 1, overflowY: 'auto' }}>

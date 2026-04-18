@@ -49,6 +49,7 @@ export async function createTask(formData: any) {
       createdById: (session.user as any).id,
       isRecurring: formData.isRecurring || false,
       recurringPattern: formData.recurringPattern || null,
+      recurringTime: formData.recurringTime || '09:00',
       events: JSON.stringify(eventsList),
       comments: JSON.stringify([])
     }
@@ -227,13 +228,16 @@ export async function reviewTask(
   // Legacy adminScore: map totalScore/100 → /5
   const adminScore = Math.round((totalScore / 100) * 5);
 
-  // Brownie conversion: totalScore * conversionRate from workspace
+  // Brownie conversion: totalScore * conversionRate from workspace * user custom pointMultiplier
   let brownieChange = 0;
   if (approved && taskObj?.assignedToId) {
     const workspace = await prisma.workspace.findFirst();
     const rate = workspace?.brownieConversion ?? 0.1;
+    const userToAward = await prisma.user.findUnique({ where: { id: taskObj.assignedToId } });
+    const multiplier = userToAward?.pointMultiplier ?? 1.0;
+    
     const isLate = taskObj.dueAt ? new Date() > new Date(taskObj.dueAt) : false;
-    brownieChange = isLate ? -1 : Math.round(totalScore * rate);
+    brownieChange = isLate ? -1 : Math.round(totalScore * rate * multiplier);
   }
 
   const data: any = {
@@ -284,6 +288,7 @@ export async function abandonTask(taskId: string, reason: string, penalty: numbe
       abandonedAt: new Date(),
       abandonReason: reason,
       abandonPenalty: penalty,
+      assignedToId: null, // Clear assignment so it drops off active queue
       events: JSON.stringify([
         ...existingEvents,
         { id: `eab${Date.now()}`, type: 'TASK_ABANDONED', label: `Abandoned by ${session.user.name}${reason ? `: ${reason}` : ''}`, by: (session.user as any).id, at: new Date().toISOString() }

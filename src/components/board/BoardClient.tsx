@@ -6,7 +6,7 @@ import { FilterBar } from './FilterBar';
 import { GridV, KanV, ListView } from './BoardViews';
 import { useRouter } from 'next/navigation';
 
-export default function BoardClient({ initialTasks, user, allUsers }: { initialTasks: any[]; user: any; allUsers: any[] }) {
+export default function BoardClient({ initialTasks, user, allUsers, title = 'Creative Board', hideTitle = false }: { initialTasks: any[]; user: any; allUsers: any[]; title?: string; hideTitle?: boolean }) {
   const [filters, setFilters] = useState<Record<string, string[]>>({});
   const [vm, setVm] = useState('board');
   const [q, setQ] = useState('');
@@ -77,22 +77,24 @@ export default function BoardClient({ initialTasks, user, allUsers }: { initialT
     <div style={{ position: 'relative' }}>
       <StatsBar tasks={tasks} userRole={user.role} />
       
-      <div style={{ padding: '16px 24px', background: 'var(--bg1)', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px' }}>Creative Board</h1>
-        <span style={{ fontSize: 12, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>{tasks.length} tasks</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)', fontSize: 15 }}>⌕</span>
-            <input 
-              value={q} 
-              onChange={e => setQ(e.target.value)} 
-              placeholder="Search tasks…" 
-              className="inp" 
-              style={{ paddingLeft: 27, width: 170, padding: '6px 11px 6px 26px', minHeight: 36 }} 
-            />
+      {!hideTitle && (
+        <div style={{ padding: '16px 24px', background: 'var(--bg1)', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)' }}>
+          <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px' }}>{title}</h1>
+          <span style={{ fontSize: 12, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>{tasks.length} tasks</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)', fontSize: 15 }}>⌕</span>
+              <input 
+                value={q} 
+                onChange={e => setQ(e.target.value)} 
+                placeholder="Search tasks…" 
+                className="inp" 
+                style={{ paddingLeft: 27, width: 170, padding: '6px 11px 6px 26px', minHeight: 36 }} 
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
       
       <FilterBar 
         filters={filters} 

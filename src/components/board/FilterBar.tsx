@@ -45,25 +45,53 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
       
       <Divider />
       
-      {/* Status filters */}
-      {[['in_progress', 'In Progress'], ['submitted', 'Submitted'], ['open', 'Open'], ['overdue', 'Overdue'], ['under_review', 'Review'], ['completed', 'Done']].map(([k, l]) => {
-        const on = (filters.status || []).includes(k);
+      {/* Status Dropdown */}
+      <div style={{ position: 'relative' }}>
+        <select 
+          onChange={e => { if (e.target.value) tog('status', e.target.value); e.target.value = ''; }}
+          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--t1)', padding: '6px 28px 6px 12px', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          value=""
+        >
+          <option value="" disabled>Status...</option>
+          {[['in_progress', 'In Progress'], ['submitted', 'Submitted'], ['open', 'Open'], ['overdue', 'Overdue'], ['under_review', 'Review'], ['completed', 'Done'], ['abandoned', 'Abandoned']].map(([k, l]) => (
+             <option key={k} value={k}>{l}</option>
+          ))}
+        </select>
+        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 12 }}>▼</span>
+      </div>
+      
+      {/* Active Status Pills */}
+      {(filters.status || []).map(k => {
         const c = SC[k] || SC.draft;
         return (
-          <button key={k} onClick={() => tog('status', k)} className={`fb${on ? ' on' : ''}`} style={on ? { background: c.bg, color: c.tc, borderColor: c.tc + '66' } : {}}>
-            {l}
+          <button key={k} onClick={() => tog('status', k)} className="fb on" style={{ background: c.bg, color: '#FFF', borderColor: c.tc + '66', fontSize: 14 }}>
+            {c.l} ✕
           </button>
         );
       })}
-      
+
       <Divider />
       
-      {/* Category filters */}
-      {CATS.map(cat => {
-        const on = (filters.category || []).includes(cat);
-        return <button key={cat} onClick={() => tog('category', cat)} className={`fb${on ? ' on' : ''}`}>{cat}</button>;
-      })}
-      
+      {/* Category Dropdown */}
+      <div style={{ position: 'relative' }}>
+        <select 
+          onChange={e => { if (e.target.value) tog('category', e.target.value); e.target.value = ''; }}
+          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--t1)', padding: '6px 28px 6px 12px', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          value=""
+        >
+          <option value="" disabled>Category...</option>
+          {CATS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 12 }}>▼</span>
+      </div>
+
+      {/* Active Category Pills */}
+      {(filters.category || []).map(cat => (
+        <button key={cat} onClick={() => tog('category', cat)} className="fb on" style={{ fontSize: 14, color: '#FFF' }}>
+          {cat} ✕
+        </button>
+      ))}
+
       <Divider />
       
       {/* Priority filters */}

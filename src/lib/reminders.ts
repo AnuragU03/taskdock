@@ -27,34 +27,41 @@ export async function checkAndSendRenewalReminders(
       const daysUntil = (renewal.getTime() - nowMs) / (1000 * 60 * 60 * 24);
 
       // ── 4-day reminder ──
-      if (daysUntil > 0 && daysUntil <= 4) {
+      if (Math.ceil(daysUntil) === 4) {
         const lastSent = cred.reminder4dAt?.getTime() ?? 0;
         if (nowMs - lastSent > TWENTY_HOURS_MS) {
           await prisma.notification.create({
             data: {
               workspaceId,
               userId,
-              text: `⊘ Payment reminder: "${cred.toolName}" renews on ${cred.renewalDate} (${Math.ceil(daysUntil)} day${Math.ceil(daysUntil) !== 1 ? "s" : ""} away). Cost: ₹${cred.monthlyCost > 0 ? cred.monthlyCost.toLocaleString("en-IN") : "N/A"}.`,
+              text: `⊘ Payment reminder: "${cred.toolName}" renews on ${cred.renewalDate} (4 days away). Cost: ₹${cred.monthlyCost > 0 ? cred.monthlyCost.toLocaleString("en-IN") : "N/A"}.`,
               type: "PAYMENT_REMINDER",
-              metadata: JSON.stringify({
-                credentialId: cred.id,
-                toolName: cred.toolName,
-                renewalDate: cred.renewalDate,
-                monthlyCost: cred.monthlyCost,
-                daysUntil: Math.ceil(daysUntil),
-                threshold: "4d",
-              }),
+              metadata: JSON.stringify({ credentialId: cred.id, toolName: cred.toolName, renewalDate: cred.renewalDate, monthlyCost: cred.monthlyCost, daysUntil: 4, threshold: "4d" }),
             },
           });
-          await prisma.credential.update({
-            where: { id: cred.id },
-            data: { reminder4dAt: now },
+          await prisma.credential.update({ where: { id: cred.id }, data: { reminder4dAt: now } });
+        }
+      }
+
+      // ── 3-day reminder ──
+      if (Math.ceil(daysUntil) === 3) {
+        const lastSent = cred.reminder3dAt?.getTime() ?? 0;
+        if (nowMs - lastSent > TWENTY_HOURS_MS) {
+          await prisma.notification.create({
+            data: {
+              workspaceId,
+              userId,
+              text: `⊘ Payment reminder: "${cred.toolName}" renews in 3 days. Action required!`,
+              type: "PAYMENT_REMINDER",
+              metadata: JSON.stringify({ credentialId: cred.id, toolName: cred.toolName, renewalDate: cred.renewalDate, monthlyCost: cred.monthlyCost, daysUntil: 3, threshold: "3d" }),
+            },
           });
+          await prisma.credential.update({ where: { id: cred.id }, data: { reminder3dAt: now } });
         }
       }
 
       // ── 1-day reminder ──
-      if (daysUntil > 0 && daysUntil <= 1) {
+      if (Math.ceil(daysUntil) === 1) {
         const lastSent = cred.reminder1dAt?.getTime() ?? 0;
         if (nowMs - lastSent > TWENTY_HOURS_MS) {
           await prisma.notification.create({
@@ -63,25 +70,14 @@ export async function checkAndSendRenewalReminders(
               userId,
               text: `🚨 URGENT: "${cred.toolName}" renews TOMORROW (${cred.renewalDate}). Make sure the payment is scheduled!`,
               type: "PAYMENT_REMINDER",
-              metadata: JSON.stringify({
-                credentialId: cred.id,
-                toolName: cred.toolName,
-                renewalDate: cred.renewalDate,
-                monthlyCost: cred.monthlyCost,
-                daysUntil: Math.ceil(daysUntil),
-                threshold: "1d",
-              }),
+              metadata: JSON.stringify({ credentialId: cred.id, toolName: cred.toolName, renewalDate: cred.renewalDate, monthlyCost: cred.monthlyCost, daysUntil: 1, threshold: "1d" }),
             },
           });
-          await prisma.credential.update({
-            where: { id: cred.id },
-            data: { reminder1dAt: now },
-          });
+          await prisma.credential.update({ where: { id: cred.id }, data: { reminder1dAt: now } });
         }
       }
     }
   } catch (err) {
-    // Silent fail — reminder check should never break the layout
     console.error("[RenewalReminder]", err);
   }
 }

@@ -43,6 +43,7 @@ model User {
   color         String    @default("#2563EB")
   initials      String    @default("??")
   browniePoints Int       @default(0)
+  pointMultiplier Float   @default(1.0)
   createdAt     DateTime  @default(now())
   
   accounts      Account[]
@@ -131,6 +132,7 @@ model Task {
   // Recurring tasks
   isRecurring      Boolean  @default(false)
   recurringPattern String?  // "daily" | "weekly" | "biweekly" | "monthly"
+  recurringTime    String?  @default("09:00")
 
   events          String?  // Stored as JSON string due to SQLite constraints
   comments        String?  // Stored as JSON string
@@ -209,6 +211,7 @@ model Credential {
   sharedWith   String? // JSON array of user IDs
   notes       String?
   reminder4dAt DateTime?  // last time 4-day renewal reminder was sent (dedup window: 20h)
+  reminder3dAt DateTime?
   reminder1dAt DateTime?  // last time 1-day renewal reminder was sent (dedup window: 20h)
   createdAt   DateTime @default(now())
 }

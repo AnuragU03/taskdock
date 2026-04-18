@@ -6,6 +6,10 @@ import { updateUserRole, deleteUser } from '@/app/actions/admin';
 import { upsertProfile, updateWorkspaceSettings } from '@/app/actions/profile';
 import { useRouter } from 'next/navigation';
 import { getAllTodayAttendance, adminOverrideAttendance, getRecentAttendance } from '@/app/actions/attendance';
+import { updateUserMultiplier } from '@/app/actions/admin';
+import { bulkCreateTasks } from '@/app/actions/task';
+import * as XLSX from 'xlsx';
+import { CATS } from '@/lib/constants';
 
 function HistoryPanel({ userId }: { userId: string }) {
   const [data, setData] = useState<any[]|null>(null);
@@ -62,6 +66,64 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
   const [activeTab, setActiveTab] = useState('team');
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 2400); };
 
+  // Bulk Import State
+  const [importTasks, setImportTasks] = useState<any[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        if (!bstr) return;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws);
+        const mapped = data.map((row: any) => {
+          const rawAssignee = row['Assignee'] || row['Email'] || row['Assigned To'];
+          let assignedToId = null;
+          if (rawAssignee) {
+            const match = members.find(m => 
+              m.email?.toLowerCase() === String(rawAssignee).toLowerCase().trim() ||
+              m.name?.toLowerCase() === String(rawAssignee).toLowerCase().trim()
+            );
+            if (match) assignedToId = match.id;
+          }
+          return {
+            title: row['Title'] || row['Task'] || 'Untitled Batch Task',
+            desc: row['Description'] || row['Brief'] || row['Details'] || '',
+            category: row['Category'] || 'Design',
+            priority: String(row['Priority'] || 'medium').toLowerCase(),
+            weight: Number(row['Weight'] || row['Complexity'] || 5),
+            refLink: row['Link'] || row['URL'] || row['Reference'] || null,
+            assignedTo: assignedToId,
+          };
+        });
+        setImportTasks(mapped);
+      } catch (err) {
+        flash('Error reading file.');
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const submitBulk = async () => {
+    if (importTasks.length === 0) return;
+    setImportLoading(true);
+    try {
+      await bulkCreateTasks(importTasks);
+      flash(`Imported ${importTasks.length} tasks`);
+      setImportTasks([]);
+      setActiveTab('team');
+    } catch {
+      flash('Error importing tasks.');
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   // Attendance states
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
@@ -87,6 +149,13 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
       fetchAttendance();
     }
   }, [activeTab]);
+
+  const handleMultiplierChange = async (userId: string, val: string) => {
+    try {
+      await updateUserMultiplier(userId, parseFloat(val));
+      flash(`Multiplier set to ${val}x`);
+    } catch { flash('Failed to update multiplier'); }
+  };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
@@ -129,6 +198,7 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
     { id: 'team', label: 'Team Roles' },
     { id: 'profiles', label: 'Profiles & Payroll' },
     { id: 'attendance', label: "Today's Attendance" },
+    { id: 'import', label: 'Bulk Import' },
     { id: 'settings', label: 'Settings' }
   ];
 
@@ -156,13 +226,14 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
 
       {activeTab === 'team' && (
         <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '12px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr', padding: '12px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
             <div>Member</div>
             <div>Points</div>
+            <div>Multiplier</div>
             <div>Role</div>
           </div>
           {members.map(u => (
-            <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Av user={u} sz={40} />
                 <div>
@@ -171,6 +242,15 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
                 </div>
               </div>
               <div style={{ fontSize: 16, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', fontWeight: 600 }}>{u.browniePoints}</div>
+              <div style={{ paddingRight: 10 }}>
+                <select className="inp" defaultValue={u.pointMultiplier || 1.0} onChange={e => handleMultiplierChange(u.id, e.target.value)} style={{ padding: '4px 8px', fontSize: 13, minHeight: 0 }}>
+                  <option value="0.5">0.5x (Probation)</option>
+                  <option value="1.0">1.0x (Standard)</option>
+                  <option value="1.2">1.2x (Senior)</option>
+                  <option value="1.5">1.5x (Elite)</option>
+                  <option value="2.0">2.0x (GOD)</option>
+                </select>
+              </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <select className="inp" defaultValue={u.role} onChange={e => handleRoleChange(u.id, e.target.value)} style={{ padding: '6px 10px', fontSize: 14, minHeight: 0 }}>
                   <option value="employee">Creative / Employee</option>
@@ -284,6 +364,47 @@ export default function AdminClient({ members, workspace }: { members: any[], wo
            })}
         </div>
       )}
+
+      {activeTab === 'import' && (
+        <div>
+          <div style={{ background: 'var(--bg1)', border: '1px dashed var(--border)', borderRadius: 12, padding: 40, textAlign: 'center', marginBottom: 24 }}>
+            <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} style={{ display: 'none' }} id="dash-import" />
+            <label htmlFor="dash-import" style={{ display: 'inline-block', padding: '10px 20px', background: 'var(--accent)', color: '#fff', borderRadius: 8, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, cursor: 'pointer' }}>
+              Select Spreadsheet
+            </label>
+            <div style={{ fontSize: 13, color: 'var(--t4)', marginTop: 12, fontFamily: 'var(--font-mono), monospace' }}>Supported: Title, Description, Category, Priority, Weight, Assignee</div>
+          </div>
+          {importTasks.length > 0 && (
+            <div style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ padding: '16px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', color: 'var(--t1)' }}>{importTasks.length} tasks detected</span>
+                <button onClick={submitBulk} disabled={importLoading} className="bp">{importLoading ? 'Importing...' : `▶ Generate ${importTasks.length} Tasks`}</button>
+              </div>
+              <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg2)', zIndex: 1 }}>
+                    <tr style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+                      <th style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)' }}>Title</th>
+                      <th style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)' }}>Category</th>
+                      <th style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)' }}>Assignee</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importTasks.map((t, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '10px 16px', fontSize: 13, color: 'var(--t1)' }}>{t.title}</td>
+                        <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--t3)' }}>{t.category}</td>
+                        <td style={{ padding: '10px 16px', fontSize: 12, color: t.assignedTo ? 'var(--green)' : 'var(--t4)' }}>
+                          {t.assignedTo ? members.find(m => m.id === t.assignedTo)?.name : 'Open Queue'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
 
       {activeTab === 'settings' && (
         <div style={{ maxWidth: 500 }}>

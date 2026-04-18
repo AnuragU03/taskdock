@@ -65,12 +65,12 @@ async function markRead(ids: string[]) {
   } catch {}
 }
 
-async function ackBroadcast(notifId: string, response: 'yes' | 'no') {
+async function ackBroadcast(notifId: string, response: 'yes' | 'no', replyText?: string) {
   try {
     await fetch(`/api/broadcast/${notifId}/ack`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ response }),
+      body: JSON.stringify({ response, replyText }),
     });
   } catch {}
 }
@@ -89,6 +89,23 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
   const load = useCallback(async () => {
     const data = await fetchUnread();
     if (data.length > 0) {
+      if (!visible && data.some(n => n.type === 'BROADCAST')) {
+        // Play simple ping for new broadcasts
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+          osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } catch {}
+      }
       setNotifs(data);
       setVisible(true);
       setDismissed(false);
@@ -96,7 +113,7 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
       setNotifs([]);
       setVisible(false);
     }
-  }, [notifs.length]);
+  }, [notifs.length, visible]);
 
   useEffect(() => { load(); }, []);
 
@@ -126,9 +143,9 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
     else router.push('/notifications');
   };
 
-  const handleAck = async (n: Notif, response: 'yes' | 'no') => {
+  const handleAck = async (n: Notif, response: 'yes' | 'no', replyText?: string) => {
     setAckedIds(prev => new Set([...prev, n.id]));
-    await ackBroadcast(n.id, response);
+    await ackBroadcast(n.id, response, replyText);
     await markRead([n.id]);
     load();
   };
@@ -141,6 +158,9 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
 
   const BroadcastActions = ({ n, color }: { n: Notif; color: string }) => {
     const isAcked = ackedIds.has(n.id);
+    const [replying, setReplying] = useState<'yes' | 'no' | null>(null);
+    const [replyText, setReplyText] = useState('');
+
     if (isAcked) {
       return (
         <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', padding: '2px 8px', border: '1px solid var(--green)44', borderRadius: 6 }}>
@@ -148,16 +168,41 @@ export function NotifPatti({ initialCount }: { initialCount: number }) {
         </span>
       );
     }
+
+    if (replying) {
+      return (
+        <div style={{ display: 'flex', gap: 5, flexShrink: 0, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+          <input
+            autoFocus
+            value={replyText}
+            onChange={e => setReplyText(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleAck(n, replying, replyText);
+              if (e.key === 'Escape') setReplying(null);
+            }}
+            placeholder={`Reply ${replying}... (optional)`}
+            style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', background: 'rgba(255,255,255,0.06)', border: `1px solid ${color}44`, color: '#fff', padding: '3px 8px', borderRadius: 6, outline: 'none', width: 140 }}
+          />
+          <button onClick={() => handleAck(n, replying, replyText)} style={{ fontSize: 11, fontFamily: 'var(--font-sans), sans-serif', background: color, border: 'none', color: '#000', padding: '3px 8px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+            Send
+          </button>
+          <button onClick={() => setReplying(null)} style={{ fontSize: 11, fontFamily: 'var(--font-sans), sans-serif', background: 'transparent', border: `1px solid var(--border)`, color: 'var(--t4)', padding: '2px 6px', borderRadius: 6, cursor: 'pointer' }}>
+            ×
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
         <button
-          onClick={(e) => { e.stopPropagation(); handleAck(n, 'yes'); }}
+          onClick={(e) => { e.stopPropagation(); setReplying('yes'); }}
           style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.4)', color: '#22C55E', padding: '2px 10px', borderRadius: 6, cursor: 'pointer' }}
         >
           ✓ Yes
         </button>
         <button
-          onClick={(e) => { e.stopPropagation(); handleAck(n, 'no'); }}
+          onClick={(e) => { e.stopPropagation(); setReplying('no'); }}
           style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.4)', color: '#EF4444', padding: '2px 10px', borderRadius: 6, cursor: 'pointer' }}
         >
           ✕ No

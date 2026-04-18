@@ -269,8 +269,11 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>① Completion <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>— Did they fully meet all deliverables?</span></div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono), monospace' }}>{completionScore}<span style={{ fontSize: 12, color: 'var(--t4)', fontWeight: 400 }}>/30</span></div>
                 </div>
-                <input type="range" min={0} max={30} step={1} value={completionScore} onChange={e => setCompletionScore(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginTop: 2 }}><span>Incomplete</span><span>Partial</span><span>Full</span></div>
+                <div style={{ display: 'flex', gap: 6, width: '100%' }}>
+                  <button onClick={() => setCompletionScore(0)} style={{ flex: 1, padding: '8px 0', border: '1px solid var(--border)', background: completionScore === 0 ? 'var(--red-bg)' : 'var(--bg1)', color: completionScore === 0 ? 'var(--red)' : 'var(--t3)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>Incomplete</button>
+                  <button onClick={() => setCompletionScore(15)} style={{ flex: 1, padding: '8px 0', border: '1px solid var(--border)', background: completionScore === 15 ? 'var(--amber-bg)' : 'var(--bg1)', color: completionScore === 15 ? 'var(--amber)' : 'var(--t3)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>Partial</button>
+                  <button onClick={() => setCompletionScore(30)} style={{ flex: 1, padding: '8px 0', border: '1px solid var(--border)', background: completionScore === 30 ? 'var(--green-bg)' : 'var(--bg1)', color: completionScore === 30 ? 'var(--green)' : 'var(--t3)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>Full</button>
+                </div>
               </div>
 
               {/* Tier 2: Quality (0-40) */}
@@ -279,8 +282,11 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>② Quality &amp; Review <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>— Super admin subjective quality score</span></div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono), monospace' }}>{qualityScore}<span style={{ fontSize: 12, color: 'var(--t4)', fontWeight: 400 }}>/40</span></div>
                 </div>
-                <input type="range" min={0} max={40} step={1} value={qualityScore} onChange={e => setQualityScore(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', marginTop: 2 }}><span>Poor</span><span>Acceptable</span><span>Excellent</span></div>
+                <div style={{ display: 'flex', gap: 6, width: '100%' }}>
+                  <button onClick={() => setQualityScore(0)} style={{ flex: 1, padding: '8px 0', border: '1px solid var(--border)', background: qualityScore === 0 ? 'var(--red-bg)' : 'var(--bg1)', color: qualityScore === 0 ? 'var(--red)' : 'var(--t3)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>Poor</button>
+                  <button onClick={() => setQualityScore(20)} style={{ flex: 1, padding: '8px 0', border: '1px solid var(--border)', background: qualityScore === 20 ? 'var(--amber-bg)' : 'var(--bg1)', color: qualityScore === 20 ? 'var(--amber)' : 'var(--t3)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>Acceptable</button>
+                  <button onClick={() => setQualityScore(40)} style={{ flex: 1, padding: '8px 0', border: '1px solid var(--border)', background: qualityScore === 40 ? 'var(--green-bg)' : 'var(--bg1)', color: qualityScore === 40 ? 'var(--green)' : 'var(--t3)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>Excellent</button>
+                </div>
               </div>
 
               {/* Tier 3: Productivity (auto) */}

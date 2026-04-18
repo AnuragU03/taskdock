@@ -7,11 +7,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { response } = await req.json();
+    const { response, replyText } = await req.json();
     if (response !== "yes" && response !== "no") {
       return NextResponse.json({ error: "Invalid response" }, { status: 400 });
     }
-    const result = await acknowledgeBroadcast(params.id, response);
+    const result = await acknowledgeBroadcast(params.id, response, replyText);
     return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });

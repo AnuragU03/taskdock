@@ -25,12 +25,11 @@ export default async function OpenQueuePage() {
 
   return (
     <div>
-      <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg,#1A0D2E,#0D0820)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: '50%', background: '#14B8A6', opacity: .12 }} />
-        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 24, fontWeight: 700, color: '#C084FC', letterSpacing: '-.4px', marginBottom: 6 }}>Open Queue</h1>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,.6)', maxWidth: 500 }}>Unassigned creative tasks waiting for an owner. Pick up a task to start working on it.</p>
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--bg0)' }}>
+        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px' }}>Open Queue</h1>
+        <p style={{ fontSize: 14, color: 'var(--t3)', maxWidth: 500, marginTop: 4 }}>Unassigned tasks waiting for an owner. Pick up a task to start working on it.</p>
       </div>
-      <BoardClient initialTasks={tasks} user={session.user} allUsers={allUsers} />
+      <BoardClient initialTasks={tasks} user={session.user} allUsers={allUsers} hideTitle={true} />
     </div>
   );
 }

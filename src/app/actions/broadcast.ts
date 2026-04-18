@@ -46,8 +46,8 @@ export async function sendBroadcast(message: string, targetUserIds: string[]) {
   return { ok: true, broadcastId };
 }
 
-// Recipient acknowledges a broadcast with yes/no
-export async function acknowledgeBroadcast(notifId: string, response: "yes" | "no") {
+// Recipient acknowledges a broadcast with yes/no and optional reply
+export async function acknowledgeBroadcast(notifId: string, response: "yes" | "no", replyText?: string) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
 
@@ -65,7 +65,7 @@ export async function acknowledgeBroadcast(notifId: string, response: "yes" | "n
     return { ok: true, alreadyAcked: true };
   }
 
-  ackList.push({ userId, response, at: new Date().toISOString() });
+  ackList.push({ userId, response, replyText, at: new Date().toISOString() });
 
   await prisma.notification.update({
     where: { id: notifId },
@@ -79,17 +79,19 @@ export async function acknowledgeBroadcast(notifId: string, response: "yes" | "n
   let workspace = await prisma.workspace.findFirst();
   if (workspace && meta.senderId) {
     const emoji = response === "yes" ? "✓" : "✕";
+    const replyStr = replyText ? ` Reply: "${replyText}"` : "";
     await prisma.notification.create({
       data: {
         workspaceId: workspace.id,
         userId: meta.senderId,
-        text: `${emoji} ${userName} responded "${response.toUpperCase()}" to your broadcast: "${meta.message?.slice(0, 60)}${meta.message?.length > 60 ? "…" : ""}"`,
+        text: `${emoji} ${userName} responded "${response.toUpperCase()}" to your broadcast: "${meta.message?.slice(0, 60)}${meta.message?.length > 60 ? "…" : ""}".${replyStr}`,
         type: "BROADCAST_ACK",
         metadata: JSON.stringify({
           broadcastId: meta.broadcastId,
           responderId: userId,
           responderName: userName,
           response,
+          replyText,
           originalMessage: meta.message,
         }),
       },
@@ -99,6 +101,7 @@ export async function acknowledgeBroadcast(notifId: string, response: "yes" | "n
   revalidatePath("/notifications");
   return { ok: true };
 }
+
 
 // Fetch users for @mention autocomplete (called client-side via API)
 export async function getAllUsersForMention() {

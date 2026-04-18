@@ -361,7 +361,6 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
   const nav = [
     { id: '/', l: 'Board', ic: '⊞' },
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
-    { id: '/notifications', l: 'Notifications', ic: '⚐' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '☆' },
     { id: '/productivity', l: 'Productivity', ic: '◱' },
     ...( isAdmin ? [
@@ -441,9 +440,6 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
               <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 7, padding: '7px 9px', borderRadius: 7, border: 'none', cursor: 'pointer', background: isActive ? 'var(--accent-dim)' : 'transparent', color: isActive ? 'var(--accent)' : 'var(--t3)', transition: 'all .11s', fontFamily: 'var(--font-sans), sans-serif', fontWeight: isActive ? 600 : 400, fontSize: 15 }}>
                 <span style={{ fontSize: 15, opacity: 0.85 }}>{item.ic}</span>
                 <span>{item.l}</span>
-                {item.id === '/notifications' && unreadNotifsCount > 0 && (
-                  <span style={{ marginLeft: 'auto', background: 'var(--accent)', color: '#fff', fontSize: 11, borderRadius: 120, padding: '1px 5px', fontFamily: 'var(--font-mono), monospace', minWidth: 14, textAlign: 'center' }}>{unreadNotifsCount}</span>
-                )}
               </button>
             </Link>
           );
@@ -451,8 +447,10 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       </nav>
       
       {/* BROADCAST PANEL — admin/superadmin only */}
-      {isAdmin && (
+      {isAdmin ? (
         <BroadcastPanel currentUserId={user.id} />
+      ) : (
+        <EmployeeBroadcasts />
       )}
 
       {/* EARNINGS PROGRESS BAR */}

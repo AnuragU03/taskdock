@@ -125,6 +125,12 @@ export default async function AdminTrackerPage() {
           </div>
         </div>
       </div>
+      
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 5 }}>
+        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mName, idx) => (
+           <span key={mName} style={{ padding: '6px 14px', background: (idx + 1) === month ? 'var(--accent)' : 'var(--bg2)', color: (idx + 1) === month ? '#000' : 'var(--t3)', borderRadius: 20, fontSize: 13, fontFamily: 'var(--font-sans), sans-serif', fontWeight: 600, cursor: 'default' }}>{mName}</span>
+        ))}
+      </div>
 
       <TrackerGrid users={usersMapped} days={days} year={year} month={month} />
     </div>
