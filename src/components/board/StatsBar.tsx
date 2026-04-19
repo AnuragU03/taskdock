@@ -36,7 +36,7 @@ interface StatsBarProps {
 export const StatsBar = ({ tasks, userRole, minimal }: StatsBarProps) => {
   const role = (userRole || 'employee').toLowerCase();
   const def = minimal 
-    ? ['total', 'abandoned', 'od'] 
+    ? ['total', 'abandoned'] 
     : (role === 'admin' ? ['total', 'active', 'od', 'done'] : role === 'manager' ? ['sub', 'ip', 'od', 'due2d'] : ['ip', 'sub', 'done', 'due2d']);
   const [vis, setVis] = useState<string[]>(def);
   const [edit, setEdit] = useState(false);

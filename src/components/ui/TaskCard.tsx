@@ -66,7 +66,9 @@ export const CardHeader = ({ task }: { task: TaskProps }) => {
     }
   }
 
-  const cd = frozenCd || cdTicking;
+  const isAbandoned = task.status === 'abandoned';
+  const cd = isAbandoned ? { exp: false, d: 0, h: 0, m: 0, s: 0 } : (frozenCd || cdTicking);
+  const au = isAbandoned ? null : task.assignee;
   
   // If task has no deadline and not done
   if (!task.dueAt && !done && !isUnpicked) {

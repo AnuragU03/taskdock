@@ -112,6 +112,7 @@ export async function pickupTask(taskId: string) {
 
   const taskObj = await prisma.task.findUnique({ where: { id: taskId } });
   const existingEvents = taskObj?.events ? JSON.parse(taskObj.events) : [];
+  const isPreviouslyAbandoned = taskObj?.status === 'abandoned';
 
   const task = await prisma.task.update({
     where: { id: taskId },
@@ -119,6 +120,7 @@ export async function pickupTask(taskId: string) {
       status: 'in_progress',
       assignedToId: (session.user as any).id,
       pickedUpAt: new Date(),
+      dueAt: isPreviouslyAbandoned ? null : undefined, // Reset deadline for abandoned tasks
       events: JSON.stringify([
         ...existingEvents,
         { id: `ep${Date.now()}`, type: 'TASK_PICKED_UP', label: `Picked up by ${session.user.name}`, by: (session.user as any).id, at: new Date().toISOString() }
