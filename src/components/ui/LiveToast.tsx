@@ -79,14 +79,27 @@ async function playPing(type: string) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-    // MUST await resume — otherwise oscillators schedule on a suspended context = silence
     if (ctx.state === 'suspended') {
       await ctx.resume();
     }
 
     switch (type) {
+      case 'TASK_SUBMITTED':
+        // Urgent triple-tone — "action required" for admin review
+        playTriTone(ctx, 880);
+        break;
+      case 'TASK_PICKED_UP':
+        // Soft two-tone — informational
+        playBell(ctx, 660, ctx.currentTime, 0.4);
+        playBell(ctx, 783, ctx.currentTime + 0.18, 0.35);
+        break;
       case 'BROADCAST':
         playTriTone(ctx, 783);
+        break;
+      case 'BROADCAST_ACK':
+        // Two quick ascending pings — "got a reply" feel
+        playBell(ctx, 880, ctx.currentTime, 0.55);
+        playBell(ctx, 1047, ctx.currentTime + 0.14, 0.45);
         break;
       case 'PAYMENT_REMINDER':
         playTriTone(ctx, 880);
@@ -107,19 +120,25 @@ async function playPing(type: string) {
 
 
 const TYPE_COLOR: Record<string, string> = {
-  OPEN_QUEUE_POST: "#14B8A6",
-  BROADCAST: "#F59E0B",
+  OPEN_QUEUE_POST:  "#14B8A6",
+  TASK_SUBMITTED:   "#FB923C",   // orange — needs admin review
+  TASK_PICKED_UP:   "#67E8F9",   // cyan — informational
+  BROADCAST:        "#F59E0B",
+  BROADCAST_ACK:    "#34D399",
   PAYMENT_REMINDER: "#EF4444",
-  CREDENTIAL_SHARED: "#3B82F6",
-  DEFAULT: "#6366F1",
+  CREDENTIAL_SHARED:"#3B82F6",
+  DEFAULT:          "#6366F1",
 };
 
 const TYPE_ICON: Record<string, string> = {
-  OPEN_QUEUE_POST: "◈",
-  BROADCAST: "⊛",
+  OPEN_QUEUE_POST:  "◈",
+  TASK_SUBMITTED:   "↑",   // up arrow — submitted for review
+  TASK_PICKED_UP:   "⊙",   // circle dot — picked up
+  BROADCAST:        "⊛",
+  BROADCAST_ACK:    "✓",
   PAYMENT_REMINDER: "⊘",
-  CREDENTIAL_SHARED: "⊔",
-  DEFAULT: "⚐",
+  CREDENTIAL_SHARED:"⊔",
+  DEFAULT:          "⚐",
 };
 
 const TOAST_DURATION_MS = 30_000; // 30 seconds
@@ -138,10 +157,18 @@ export function LiveToast() {
       const notifs: ToastNotif[] = await res.json();
 
       const now = Date.now();
+      // ALL types that should surface as a toast + sound
+      const WATCHED = [
+        "TASK_SUBMITTED",    // admin: employee submitted work for review
+        "TASK_PICKED_UP",    // creator: someone picked up your open queue task
+        "OPEN_QUEUE_POST",   // employees: new open task available
+        "BROADCAST",         // employees: admin sent a message
+        "BROADCAST_ACK",     // admin: employee replied to broadcast
+        "PAYMENT_REMINDER",  // admin: credential renewal due
+        "CREDENTIAL_SHARED", // employee: admin shared a credential
+      ];
       const newOnes = notifs.filter(
-        (n) =>
-          ["OPEN_QUEUE_POST", "BROADCAST", "PAYMENT_REMINDER", "CREDENTIAL_SHARED"].includes(n.type) &&
-          !seenIdsRef.current.has(n.id)
+        (n) => WATCHED.includes(n.type) && !seenIdsRef.current.has(n.id)
       );
 
       if (newOnes.length > 0) {
@@ -152,7 +179,16 @@ export function LiveToast() {
         ]);
         // Only play sound AFTER the initial page load — user must interact first
         if (!isInitialPollRef.current) {
-          const priority = ['PAYMENT_REMINDER', 'BROADCAST', 'CREDENTIAL_SHARED', 'OPEN_QUEUE_POST'];
+          // Priority: payment > task submit > broadcast > ack > credential > open queue > task picked up
+          const priority = [
+            'PAYMENT_REMINDER',
+            'TASK_SUBMITTED',
+            'BROADCAST',
+            'BROADCAST_ACK',
+            'CREDENTIAL_SHARED',
+            'OPEN_QUEUE_POST',
+            'TASK_PICKED_UP',
+          ];
           const topType = newOnes.find(n => priority.includes(n.type))?.type ?? newOnes[0].type;
           await playPing(topType);
         }

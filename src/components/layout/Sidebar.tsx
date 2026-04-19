@@ -275,6 +275,100 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
   );
 }
 
+/** Admin-side: shows all sent broadcasts with per-recipient acknowledgement status */
+function AdminBroadcastHistory() {
+  const [threads, setThreads] = React.useState<any[]>([]);
+  const [open, setOpen] = React.useState(true);
+  const chatRef = React.useRef<HTMLDivElement>(null);
+
+  const fmtTime = (s: string) => {
+    const m = Math.floor((Date.now() - new Date(s).getTime()) / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    if (m < 1440) return `${Math.floor(m / 60)}h ago`;
+    return `${Math.floor(m / 1440)}d ago`;
+  };
+
+  const load = () => {
+    fetch('/api/broadcast/sent')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setThreads(data); })
+      .catch(() => {});
+  };
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => { const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
+
+  if (threads.length === 0) return null;
+
+  return (
+    <div style={{ margin: '4px 7px 8px', display: 'flex', flexDirection: 'column' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--t3)', fontSize: 11, fontFamily: 'var(--font-mono), monospace', textTransform: 'uppercase', letterSpacing: '.05em', cursor: 'pointer', marginBottom: 5 }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Sent ({threads.length})
+        </span>
+        <span style={{ fontSize: 9, opacity: .5 }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div ref={chatRef} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden auto', maxHeight: 320, display: 'flex', flexDirection: 'column' }}>
+          {threads.map((thread) => {
+            const ackedCount = thread.recipients.filter((r: any) => r.acked).length;
+            const total = thread.recipients.length;
+
+            return (
+              <div key={thread.broadcastId} style={{ borderBottom: '1px solid var(--border)', padding: '10px 11px 9px' }}>
+                {/* Sent message bubble */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, marginBottom: 8 }}>
+                  <div style={{ background: 'var(--accent)', borderRadius: '10px 0 10px 10px', padding: '7px 10px', fontSize: 13, color: '#fff', lineHeight: 1.5, maxWidth: '90%', alignSelf: 'flex-end' }}>
+                    {thread.message}
+                  </div>
+                  <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>
+                    {fmtTime(thread.sentAt)} · {ackedCount}/{total} replied
+                  </span>
+                </div>
+
+                {/* Recipients with ack status */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {thread.recipients.map((r: any) => (
+                    <div key={r.userId} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: r.color || 'var(--bg4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                          {r.initials || r.name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-mono), monospace', flex: 1 }}>{r.name}</span>
+                        {r.acked ? (
+                          <span style={{ fontSize: 10, color: r.response === 'yes' ? 'var(--green)' : 'var(--red)', fontFamily: 'var(--font-mono), monospace', fontWeight: 600 }}>
+                            {r.response === 'yes' ? '✓ Yes' : '✕ No'}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', fontStyle: 'italic' }}>pending</span>
+                        )}
+                      </div>
+                      {/* Reply text if any */}
+                      {r.replyText && (
+                        <div style={{ marginLeft: 24, background: 'var(--bg3)', borderRadius: '0 8px 8px 8px', padding: '5px 8px', fontSize: 12, color: 'var(--t2)', lineHeight: 1.4 }}>
+                          "{r.replyText}"
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmployeeBroadcasts({ currentUserId }: { currentUserId: string }) {
   const [messages, setMessages] = React.useState<any[]>([]);
   const [replies, setReplies] = React.useState<Record<string, string>>({});
@@ -538,7 +632,10 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       
       {/* BROADCAST PANEL — admin/superadmin only */}
       {isAdmin ? (
-        <BroadcastPanel currentUserId={user.id} />
+        <>
+          <BroadcastPanel currentUserId={user.id} />
+          <AdminBroadcastHistory />
+        </>
       ) : (
         <EmployeeBroadcasts currentUserId={user.id} />
       )}
