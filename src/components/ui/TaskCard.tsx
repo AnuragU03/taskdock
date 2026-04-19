@@ -42,7 +42,6 @@ export const getUrgency = (cd: any) => {
 
 export const CardHeader = ({ task }: { task: TaskProps }) => {
   const cdTicking = useCD(task.dueAt || null);
-  const au = task.assignee;
   const done = ['completed', 'cancelled'].includes(task.status);
   const isSubmitted = task.status === 'submitted';
   const isUnpicked = task.type === 'open' && !task.assignedTo && task.status === 'open';
