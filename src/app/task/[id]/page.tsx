@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import DetailClient from "./DetailClient";
 
-export default async function TaskDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {
