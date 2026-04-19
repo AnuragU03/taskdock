@@ -81,24 +81,22 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
       </div>
 
       <Divider />
-      
-        {/* Priority Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <select 
-            onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, priority: [] })); else tog('priority', e.target.value); e.target.value = ''; } }}
-            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.priority || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120 }}
-            value=""
-          >
-            <option value="" disabled>{(filters.priority || []).length ? `${(filters.priority || []).length} Priority` : 'Priority'}</option>
-            {[['urgent', 'Urgent'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']].map(([v, l]) => (
-               <option key={v} value={v}>{l} { (filters.priority || []).includes(v) ? '✓' : '' }</option>
-            ))}
-            {(filters.priority || []).length > 0 && <option value="CLEAR">— Clear Priority —</option>}
-          </select>
-          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 10 }}>▼</span>
-        </div>
+      {/* Priority Dropdown */}
+      <div style={{ position: 'relative' }}>
+        <select 
+          onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, priority: [] })); else tog('priority', e.target.value); e.target.value = ''; } }}
+          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.priority || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120 }}
+          value=""
+        >
+          <option value="" disabled>{(filters.priority || []).length ? `${(filters.priority || []).length} Priority` : 'Priority'}</option>
+          {[['urgent', 'Urgent'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']].map(([v, l]) => (
+             <option key={v} value={v}>{l} { (filters.priority || []).includes(v) ? '✓' : '' }</option>
+          ))}
+          {(filters.priority || []).length > 0 && <option value="CLEAR">— Clear Priority —</option>}
+        </select>
+        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 10 }}>▼</span>
       </div>
-      
+
       <Divider />
       
       {/* Assignee avatars hub */}
