@@ -329,28 +329,150 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
   );
 }
 
-function EmployeeBroadcasts() {
-  const [active, setActive] = useState<any[]>([]);
-  
-  useEffect(() => {
+function EmployeeBroadcasts({ currentUserId }: { currentUserId: string }) {
+  const [messages, setMessages] = React.useState<any[]>([]);
+  const [replies, setReplies] = React.useState<Record<string, string>>({});
+  const [sending, setSending] = React.useState<Record<string, boolean>>({});
+  const [open, setOpen] = React.useState(true);
+  const chatRef = React.useRef<HTMLDivElement>(null);
+
+  const fmtTime = (s: string) => {
+    const m = Math.floor((Date.now() - new Date(s).getTime()) / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    if (m < 1440) return `${Math.floor(m / 60)}h ago`;
+    return `${Math.floor(m / 1440)}d ago`;
+  };
+
+  const load = () => {
     fetch('/api/broadcast/active')
       .then(r => r.json())
-      .then(data => setActive(data))
+      .then(data => {
+        if (Array.isArray(data)) setMessages(data);
+      })
       .catch(() => {});
+  };
+
+  useEffect(() => { load(); }, []);
+
+  // Poll every 30s for new messages
+  useEffect(() => {
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
   }, []);
 
-  if (active.length === 0) return null;
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const sendReply = async (notifId: string) => {
+    const text = replies[notifId]?.trim();
+    if (!text) return;
+    setSending(s => ({ ...s, [notifId]: true }));
+    try {
+      await fetch(`/api/broadcast/${notifId}/ack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response: 'yes', replyText: text }),
+      });
+      setReplies(r => ({ ...r, [notifId]: '' }));
+      load();
+    } catch {}
+    setSending(s => ({ ...s, [notifId]: false }));
+  };
+
+  if (messages.length === 0) return null;
 
   return (
-    <div style={{ margin: '0 7px 12px', padding: '12px', background: 'linear-gradient(135deg,#0F172A,#020617)', border: '1px solid var(--accent-dim)', borderRadius: 12 }}>
-      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Active Broadcasts</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {active.map(b => (
-          <div key={b.id} style={{ fontSize: 13, color: 'var(--t2)', lineHeight: 1.5, paddingLeft: 8, borderLeft: '2px solid var(--accent)' }}>
-            {b.message}
+    <div style={{ margin: '0 7px 8px', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--t3)', fontSize: 11, fontFamily: 'var(--font-mono), monospace', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer', marginBottom: 5 }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Messages ({messages.length})
+        </span>
+        <span style={{ fontSize: 9 }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {/* Message feed */}
+          <div ref={chatRef} style={{ maxHeight: 280, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0, padding: '8px 0' }}>
+            {[...messages].reverse().map(msg => {
+              const myAck = msg.acknowledgedBy?.find((a: any) => a.userId === currentUserId);
+              const alreadyReplied = !!myAck;
+
+              return (
+                <div key={msg.id} style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {/* Admin bubble */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--bg4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--t3)', flexShrink: 0 }}>
+                      {(msg.senderName || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', marginBottom: 3 }}>
+                        {msg.senderName} · {fmtTime(msg.createdAt)}
+                      </div>
+                      <div style={{ background: 'var(--bg3)', borderRadius: '0 10px 10px 10px', padding: '8px 10px', fontSize: 13, color: 'var(--t1)', lineHeight: 1.55 }}>
+                        {msg.message}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* My reply (if already sent) */}
+                  {alreadyReplied && myAck.replyText && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                      <div>
+                        <div style={{ background: 'var(--accent)', borderRadius: '10px 0 10px 10px', padding: '7px 10px', fontSize: 13, color: '#fff', lineHeight: 1.55, maxWidth: 154 }}>
+                          {myAck.replyText}
+                        </div>
+                        <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 2, textAlign: 'right', fontFamily: 'var(--font-mono), monospace' }}>
+                          ✓ Sent
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Acknowledged but no reply */}
+                  {alreadyReplied && !myAck.replyText && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', fontStyle: 'italic' }}>✓ Acknowledged</span>
+                    </div>
+                  )}
+
+                  {/* Reply input (if not yet replied) */}
+                  {!alreadyReplied && (
+                    <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end', marginTop: 2 }}>
+                      <input
+                        value={replies[msg.id] || ''}
+                        onChange={e => setReplies(r => ({ ...r, [msg.id]: e.target.value }))}
+                        onKeyDown={e => { if (e.key === 'Enter') sendReply(msg.id); }}
+                        placeholder="Reply..."
+                        style={{ flex: 1, background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 20, padding: '5px 10px', fontSize: 12, color: 'var(--t1)', outline: 'none', fontFamily: 'var(--font-sans), sans-serif' }}
+                      />
+                      <button
+                        onClick={() => sendReply(msg.id)}
+                        disabled={sending[msg.id] || !replies[msg.id]?.trim()}
+                        style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: !replies[msg.id]?.trim() ? 0.4 : 1 }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -389,9 +511,9 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
     { id: '/open-queue', l: 'Open Queue', ic: '◈' },
     { id: '/leaderboard', l: 'Leaderboard', ic: '☆' },
     { id: '/productivity', l: 'Productivity', ic: '◱' },
+    { id: '/vault', l: 'Credential Locker', ic: '⎔' },
     ...( isAdmin ? [
       { id: '/admin/tracker', l: 'Activity Tracker', ic: '◫' },
-      { id: '/vault', l: 'Credential Locker', ic: '⎔' },
       { id: '/admin', l: 'Admin Settings', ic: '⬡' }
     ] : [])
   ];
@@ -475,7 +597,7 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       {isAdmin ? (
         <BroadcastPanel currentUserId={user.id} />
       ) : (
-        <EmployeeBroadcasts />
+        <EmployeeBroadcasts currentUserId={user.id} />
       )}
 
       {/* EARNINGS PROGRESS BAR */}

@@ -25,6 +25,7 @@ const TYPE_COLOR: Record<string, string> = {
   BROADCAST_ACK: "var(--green)",
   OPEN_QUEUE_POST: "#14B8A6",
   PAYMENT_REMINDER: "var(--red)",
+  CREDENTIAL_SHARED: "var(--blue)",
   DEFAULT: "var(--t3)",
 };
 
@@ -41,11 +42,13 @@ const TYPE_ICON: Record<string, string> = {
   BROADCAST_ACK: "◎",
   OPEN_QUEUE_POST: "◈",
   PAYMENT_REMINDER: "⊘",
+  CREDENTIAL_SHARED: "⊔",
   DEFAULT: "⚐",
 };
 
 function BroadcastRow({ notif }: { notif: Notif }) {
   const [response, setResponse] = useState<string>("");
+  const [status, setStatus] = useState<string>("idle");
   const [sending, setSending] = useState(false);
 
   const meta = notif.metadata ? (() => { try { return JSON.parse(notif.metadata!); } catch { return {}; } })() : {};

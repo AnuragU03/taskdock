@@ -51,6 +51,21 @@ export async function shareCredential(credId: string, userId: string) {
   if (!existing.includes(userId)) existing.push(userId);
 
   await prisma.credential.update({ where: { id: credId }, data: { sharedWith: JSON.stringify(existing) } });
+
+  // Notify the recipient that a credential has been shared with them
+  const workspace = await prisma.workspace.findFirst();
+  if (workspace) {
+    await prisma.notification.create({
+      data: {
+        workspaceId: workspace.id,
+        userId,
+        text: `⊔ ${session.user.name} shared the credential "${cred?.toolName}" with you. View it in your Credential Locker.`,
+        type: 'CREDENTIAL_SHARED',
+        metadata: JSON.stringify({ credentialId: credId, toolName: cred?.toolName, sharedBy: session.user.name }),
+      },
+    });
+  }
+
   revalidatePath('/vault');
   return true;
 }
@@ -133,4 +148,21 @@ export async function markCredentialRenewed(credentialId: string, notifId?: stri
   revalidatePath('/vault');
   revalidatePath('/notifications');
   return { ok: true, newRenewalDate };
+}
+// Called by employees to get credentials shared with them
+export async function getSharedCredentials() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error('Unauthorized');
+  const userId = (session.user as any).id as string;
+
+  const all = await prisma.credential.findMany({
+    where: { sharedWith: { not: null } },
+    include: { assignedTo: { select: { id: true, name: true, image: true, color: true } } }
+  });
+
+  // Filter to creds where the current user is in sharedWith
+  return all.filter(c => {
+    const list: string[] = c.sharedWith ? JSON.parse(c.sharedWith) : [];
+    return list.includes(userId);
+  });
 }

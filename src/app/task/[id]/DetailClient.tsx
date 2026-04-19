@@ -88,10 +88,12 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
     }
   };
 
-  const isMgr = ['manager', 'admin'].includes(user.role?.toLowerCase());
+  const isMgr = ['manager', 'admin', 'superadmin'].includes(user.role?.toLowerCase());
   const isEmp = !isMgr;
   const isMe = task.assignedToId === user.id;
-  const isUnassigned = !task.assignedToId && !['completed', 'cancelled'].includes(task.status);
+  const isAbandoned = task.status === 'abandoned';
+  // Show pickup when: unassigned OR abandoned (even with legacy assignedToId still set)
+  const isUnassigned = (!task.assignedToId || isAbandoned) && !['completed', 'cancelled'].includes(task.status);
   const hasOut = task.subText || task.subLink;
   
   const safeParse = (s: string | null) => { try { return s ? JSON.parse(s) : []; } catch { return []; } };
@@ -134,7 +136,17 @@ export default function DetailClient({ initTask, user, allUsers }: { initTask: a
         </div>
         
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
-          <CDBig task={task} />
+          {isAbandoned ? (
+            <div style={{ padding: '12px 14px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20, color: 'var(--t4)' }}>⊘</span>
+              <div>
+                <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.1em' }}>Task Abandoned</div>
+                <div style={{ fontSize: 12, color: 'var(--t4)', marginTop: 2 }}>Timer stopped · Pick it up to restart</div>
+              </div>
+            </div>
+          ) : (
+            <CDBig task={task} />
+          )}
         </div>
         
         {task.refLink && (

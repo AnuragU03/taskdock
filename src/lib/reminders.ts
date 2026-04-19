@@ -26,6 +26,25 @@ export async function checkAndSendRenewalReminders(
       const renewal = new Date(cred.renewalDate);
       const daysUntil = (renewal.getTime() - nowMs) / (1000 * 60 * 60 * 24);
 
+      // ── OVERDUE — already past renewal date ──
+      if (Math.ceil(daysUntil) <= 0) {
+        const lastSent = cred.reminder1dAt?.getTime() ?? 0;
+        if (nowMs - lastSent > TWENTY_HOURS_MS) {
+          const overdueDays = Math.abs(Math.floor(daysUntil));
+          await prisma.notification.create({
+            data: {
+              workspaceId,
+              userId,
+              text: `🚨 OVERDUE: "${cred.toolName}" renewal was due on ${cred.renewalDate} (${overdueDays > 0 ? `${overdueDays} day${overdueDays > 1 ? 's' : ''} ago` : 'today'}). Please pay immediately!`,
+              type: "PAYMENT_REMINDER",
+              metadata: JSON.stringify({ credentialId: cred.id, toolName: cred.toolName, renewalDate: cred.renewalDate, monthlyCost: cred.monthlyCost, daysUntil: Math.floor(daysUntil), threshold: "overdue" }),
+            },
+          });
+          await prisma.credential.update({ where: { id: cred.id }, data: { reminder1dAt: now } });
+        }
+        continue; // Skip ahead-of-time reminders for overdue items
+      }
+
       // ── 4-day reminder ──
       if (Math.ceil(daysUntil) === 4) {
         const lastSent = cred.reminder4dAt?.getTime() ?? 0;

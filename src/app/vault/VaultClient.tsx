@@ -277,9 +277,14 @@ export default function VaultClient({ members }: { members: any[] }) {
                 {sharedUserIds.length > 3 && <span style={{ fontSize: 11, color: 'var(--t4)' }}>+{sharedUserIds.length - 3}</span>}
               </div>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <button onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--t3)' }} title="Edit">✎</button>
-                <button onClick={() => setShareId(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--t3)' }} title="Share">⊕</button>
-                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', opacity: 0.6 }} title="Delete">✕</button>
+                <button onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--t3)', lineHeight: 1, padding: '2px' }} title="Edit">✎</button>
+                <button onClick={() => setShareId(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t3)', lineHeight: 1, padding: '2px', display: 'flex', alignItems: 'center' }} title="Share">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', opacity: 0.6, lineHeight: 1, padding: '2px' }} title="Delete">✕</button>
               </div>
             </div>
           );

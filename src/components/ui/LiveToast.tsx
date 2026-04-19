@@ -9,15 +9,71 @@ interface ToastNotif {
   taskId?: string | null;
 }
 
+// ── Audio ping using Web Audio API (no external files needed) ──
+const PING_CONFIG: Record<string, { freq: number; freq2?: number; double?: boolean }> = {
+  BROADCAST:         { freq: 660, freq2: 880, double: true },  // two-tone alert
+  PAYMENT_REMINDER:  { freq: 880, double: true },              // urgent double beep
+  CREDENTIAL_SHARED: { freq: 550 },                            // soft single ping
+  OPEN_QUEUE_POST:   { freq: 440 },                            // gentle chime
+  DEFAULT:           { freq: 520 },
+};
+
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    return audioCtx;
+  } catch {
+    return null;
+  }
+}
+
+function playBeep(ctx: AudioContext, freq: number, startTime: number) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, startTime);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(0.18, startTime + 0.01);  // fade in
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25); // fade out
+  osc.start(startTime);
+  osc.stop(startTime + 0.28);
+}
+
+function playPing(type: string) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    const cfg = PING_CONFIG[type] ?? PING_CONFIG.DEFAULT;
+    const now = ctx.currentTime;
+    playBeep(ctx, cfg.freq, now);
+    if (cfg.double) {
+      playBeep(ctx, cfg.freq2 ?? cfg.freq, now + 0.18);
+    }
+  } catch { /* silent — audio blocked */ }
+}
+
+
+
 const TYPE_COLOR: Record<string, string> = {
   OPEN_QUEUE_POST: "#14B8A6",
   BROADCAST: "#F59E0B",
+  PAYMENT_REMINDER: "#EF4444",
+  CREDENTIAL_SHARED: "#3B82F6",
   DEFAULT: "#6366F1",
 };
 
 const TYPE_ICON: Record<string, string> = {
   OPEN_QUEUE_POST: "◈",
   BROADCAST: "⊛",
+  PAYMENT_REMINDER: "⊘",
+  CREDENTIAL_SHARED: "⊔",
   DEFAULT: "⚐",
 };
 
@@ -37,7 +93,7 @@ export function LiveToast() {
       const now = Date.now();
       const newOnes = notifs.filter(
         (n) =>
-          (n.type === "OPEN_QUEUE_POST" || n.type === "BROADCAST") &&
+          ["OPEN_QUEUE_POST", "BROADCAST", "PAYMENT_REMINDER", "CREDENTIAL_SHARED"].includes(n.type) &&
           !seenIdsRef.current.has(n.id)
       );
 
@@ -47,6 +103,10 @@ export function LiveToast() {
           ...prev,
           ...newOnes.map((n) => ({ ...n, expiresAt: now + TOAST_DURATION_MS })),
         ]);
+        // Play sound for the highest-priority new notification
+        const priority = ['PAYMENT_REMINDER', 'BROADCAST', 'CREDENTIAL_SHARED', 'OPEN_QUEUE_POST'];
+        const topType = newOnes.find(n => priority.includes(n.type))?.type ?? newOnes[0].type;
+        playPing(topType);
       }
     } catch { /* silent */ }
   }, []);

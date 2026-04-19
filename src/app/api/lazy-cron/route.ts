@@ -124,7 +124,10 @@ export async function GET() {
           }
         };
 
-        if (ceilDays === 4) {
+        if (ceilDays <= 0) {
+          // Already overdue — remind every day until renewed
+          await sendToAdmins(`🚨 OVERDUE: "${cred.toolName}" renewal was due on ${cred.renewalDate}. Please pay now!`, 'PAYMENT_REMINDER', 'overdue', 'reminder1dAt');
+        } else if (ceilDays === 4) {
           await sendToAdmins(`⊘ Payment reminder: "${cred.toolName}" renews in 4 days (${cred.renewalDate}).`, 'PAYMENT_REMINDER', '4d', 'reminder4dAt');
         } else if (ceilDays === 3) {
           await sendToAdmins(`⊘ Payment reminder: "${cred.toolName}" renews in 3 days. Action required!`, 'PAYMENT_REMINDER', '3d', 'reminder3dAt');
