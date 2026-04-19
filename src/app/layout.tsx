@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Mono } from "next/font/google";
+import { Rajdhani, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { getServerSession } from "next-auth";
@@ -12,8 +12,8 @@ import { NotifPatti } from "@/components/layout/NotifPatti";
 import { LiveToast } from "@/components/ui/LiveToast";
 import { checkAndSendRenewalReminders } from "@/lib/reminders";
 
-const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
-const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
+const rajdhani = Rajdhani({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
+const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "TaskDock - Creative OS",
@@ -101,7 +101,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${dmMono.variable} antialiased`}>
+      <body className={`${rajdhani.variable} ${spaceMono.variable} antialiased`}>
         <AuthProvider>
           {session ? (
             <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg0)' }}>

@@ -9,14 +9,8 @@ interface ToastNotif {
   taskId?: string | null;
 }
 
-// ── Audio ping using Web Audio API (no external files needed) ──
-const PING_CONFIG: Record<string, { freq: number; freq2?: number; double?: boolean }> = {
-  BROADCAST:         { freq: 660, freq2: 880, double: true },  // two-tone alert
-  PAYMENT_REMINDER:  { freq: 880, double: true },              // urgent double beep
-  CREDENTIAL_SHARED: { freq: 550 },                            // soft single ping
-  OPEN_QUEUE_POST:   { freq: 440 },                            // gentle chime
-  DEFAULT:           { freq: 520 },
-};
+// ── iPhone-style bell chime via Web Audio API ──
+// Uses stacked sine harmonics + slow bell decay to mimic iOS notification
 
 let audioCtx: AudioContext | null = null;
 
@@ -31,33 +25,80 @@ function getAudioContext(): AudioContext | null {
   }
 }
 
-function playBeep(ctx: AudioContext, freq: number, startTime: number) {
-  const osc = ctx.createOscillator();
+/**
+ * Plays a single bell-tone note at `freq` starting at `startTime`.
+ * Uses two oscillators (fundamental + 2.76x harmonic) to create
+ * the metallic 'bell' resonance quality, like iOS notification chimes.
+ */
+function playBell(ctx: AudioContext, freq: number, startTime: number, volume = 0.7) {
+  const DECAY = 1.4; // seconds — long tail like a real bell
+
+  // Fundamental oscillator
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator(); // harmonic partial (bell ratio)
   const gain = ctx.createGain();
-  osc.connect(gain);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
   gain.connect(ctx.destination);
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(freq, startTime);
+
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(freq, startTime);
+
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq * 2.76, startTime); // Bell harmonic ratio
+
+  // Envelope: instant attack → long exponential bell decay
   gain.gain.setValueAtTime(0, startTime);
-  gain.gain.linearRampToValueAtTime(0.18, startTime + 0.01);  // fade in
-  gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25); // fade out
-  osc.start(startTime);
-  osc.stop(startTime + 0.28);
+  gain.gain.linearRampToValueAtTime(volume, startTime + 0.005); // 5ms attack
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + DECAY);
+
+  osc1.start(startTime);
+  osc1.stop(startTime + DECAY + 0.05);
+  osc2.start(startTime);
+  osc2.stop(startTime + DECAY + 0.05);
+}
+
+/** iPhone-style tri-tone: 3 ascending bell notes played 120ms apart */
+function playTriTone(ctx: AudioContext, baseFreq: number) {
+  const now = ctx.currentTime;
+  const STEP = 0.12; // 120ms between notes
+  const scale = [1, 1.26, 1.587]; // approximate major triad intervals
+  scale.forEach((ratio, i) => {
+    playBell(ctx, baseFreq * ratio, now + i * STEP, 0.65);
+  });
+}
+
+/** Single bell ping (for less urgent notifications) */
+function playSinglePing(ctx: AudioContext, freq: number) {
+  playBell(ctx, freq, ctx.currentTime, 0.6);
 }
 
 function playPing(type: string) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
-    const cfg = PING_CONFIG[type] ?? PING_CONFIG.DEFAULT;
-    const now = ctx.currentTime;
-    playBeep(ctx, cfg.freq, now);
-    if (cfg.double) {
-      playBeep(ctx, cfg.freq2 ?? cfg.freq, now + 0.18);
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    switch (type) {
+      case 'BROADCAST':
+        playTriTone(ctx, 783); // G5 → B5 → D#6, two-tone alert
+        break;
+      case 'PAYMENT_REMINDER':
+        playTriTone(ctx, 880); // A5 → C#6 → F6, urgent higher pitch
+        break;
+      case 'CREDENTIAL_SHARED':
+        playSinglePing(ctx, 1047); // C6 — soft single chime
+        break;
+      case 'OPEN_QUEUE_POST':
+        playSinglePing(ctx, 880); // A5 — gentle single chime
+        break;
+      default:
+        playSinglePing(ctx, 660); // E5 — neutral chime
     }
-  } catch { /* silent — audio blocked */ }
+  } catch { /* silent — audio blocked by browser policy */ }
 }
+
 
 
 
