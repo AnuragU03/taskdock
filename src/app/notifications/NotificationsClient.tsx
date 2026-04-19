@@ -45,20 +45,23 @@ const TYPE_ICON: Record<string, string> = {
 };
 
 function BroadcastRow({ notif }: { notif: Notif }) {
-  const [status, setStatus] = useState<"idle" | "yes" | "no">("idle");
+  const [response, setResponse] = useState<string>("");
+  const [sending, setSending] = useState(false);
 
   const meta = notif.metadata ? (() => { try { return JSON.parse(notif.metadata!); } catch { return {}; } })() : {};
   const alreadyAcked = Array.isArray(meta.acknowledgedBy) && meta.acknowledgedBy.length > 0;
 
-  const handleAck = async (response: "yes" | "no") => {
-    setStatus(response);
+  const handleAck = async (resValue: "yes" | "no") => {
+    setSending(true);
     try {
       await fetch(`/api/broadcast/${notif.id}/ack`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response }),
+        body: JSON.stringify({ response: resValue, replyText: response.trim() }),
       });
+      setStatus(resValue);
     } catch {}
+    setSending(false);
   };
 
   return (
@@ -77,38 +80,62 @@ function BroadcastRow({ notif }: { notif: Notif }) {
           ✓ Acknowledged {status !== "idle" ? `(${status.toUpperCase()})` : ""}
         </span>
       ) : (
-        <>
-          <button
-            onClick={() => handleAck("yes")}
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+          <textarea
+            placeholder="Type your reply back to the admin..."
+            value={response}
+            onChange={(e) => setResponse(e.target.value)}
             style={{
-              fontSize: 12,
-              fontFamily: "var(--font-mono), monospace",
-              background: "rgba(34,197,94,.12)",
-              border: "1px solid rgba(34,197,94,.4)",
-              color: "#22C55E",
-              padding: "4px 14px",
-              borderRadius: 6,
-              cursor: "pointer",
+              width: "100%",
+              background: "var(--bg2)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              padding: "8px 12px",
+              color: "var(--t1)",
+              fontSize: 13,
+              fontFamily: "var(--font-sans), sans-serif",
+              resize: "none",
+              outline: "none",
             }}
-          >
-            ✓ Yes
-          </button>
-          <button
-            onClick={() => handleAck("no")}
-            style={{
-              fontSize: 12,
-              fontFamily: "var(--font-mono), monospace",
-              background: "rgba(239,68,68,.12)",
-              border: "1px solid rgba(239,68,68,.4)",
-              color: "#EF4444",
-              padding: "4px 14px",
-              borderRadius: 6,
-              cursor: "pointer",
-            }}
-          >
-            ✕ No
-          </button>
-        </>
+            rows={2}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => handleAck("yes")}
+              disabled={sending}
+              style={{
+                fontSize: 12,
+                fontFamily: "var(--font-mono), monospace",
+                background: "rgba(34,197,94,.12)",
+                border: "1px solid rgba(34,197,94,.4)",
+                color: "#22C55E",
+                padding: "6px 14px",
+                borderRadius: 6,
+                cursor: sending ? "not-allowed" : "pointer",
+                fontWeight: 600,
+              }}
+            >
+              {sending ? "..." : "✓ Send Acknowledge (Yes)"}
+            </button>
+            <button
+              onClick={() => handleAck("no")}
+              disabled={sending}
+              style={{
+                fontSize: 12,
+                fontFamily: "var(--font-mono), monospace",
+                background: "rgba(239,68,68,.12)",
+                border: "1px solid rgba(239,68,68,.4)",
+                color: "#EF4444",
+                padding: "6px 14px",
+                borderRadius: 6,
+                cursor: sending ? "not-allowed" : "pointer",
+                fontWeight: 600,
+              }}
+            >
+              {sending ? "..." : "✕ No / Can't Do"}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const TWENTY_HOURS_MS = 20 * 60 * 60 * 1000;
+
 export async function GET() {
   try {
-    const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const now = new Date();
+    const currentMs = now.getTime();
+    const todayStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
     
-    // Find tasks that are recurring
+    let createdCount = 0;
+    let reminderCount = 0;
+
+    // 1. RECURRING TASKS SPOTTING
     const recurringTasks = await prisma.task.findMany({
       where: { isRecurring: true }
     });
-
-    const now = new Date();
-    const currentMs = now.getTime();
-    
-    let createdCount = 0;
 
     for (const task of recurringTasks) {
       if (!task.recurringPattern || !task.recurringTime) continue;
@@ -24,50 +26,43 @@ export async function GET() {
       
       if (currentMs < executionTimeToday.getTime()) continue;
 
-      // Check if we already created a clone today for daily
-      // For weekly/monthly we need logic based on created/last executed time.
-      // To keep it simple, we compare current date to createdAt or a stored metadata flag.
-      // We'll read the latest clone by looking for tasks created from this one.
-      
       const pattern = task.recurringPattern; // daily, weekly, biweekly, monthly
       
-      // Let's see if there's a task with the exact same title created recently
-      // Simple heuristic: 
-      let msSinceStart = currentMs - new Date(task.createdAt).getTime();
-      let daysSinceStart = Math.floor(msSinceStart / (1000 * 60 * 60 * 24));
-      
-      let shouldCreate = false;
-      
-      // Fast check to see if we created one recently
-      const existingClones = await prisma.task.findMany({
+      // Check if we created one TODAY already
+      // Clones have isRecurring: false and match the master task's title/creator
+      const existingToday = await prisma.task.findFirst({
         where: {
           title: task.title,
-          isRecurring: false, // clones are not recurring themselves to avoid recursive explosion
-          createdById: task.createdById, // same owner
+          isRecurring: false,
+          createdById: task.createdById,
           createdAt: {
-            gte: new Date(currentMs - (1000 * 60 * 60 * 23)) // past 23 hrs
+            gte: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
           }
         }
       });
       
-      if (existingClones.length > 0) continue; // we already spawned one recently
+      if (existingToday) continue; 
 
-      // If it's a completely new day based on pattern
+      // If not created today, check if the pattern threshold is met since the LATEST clone
       const latestClone = await prisma.task.findFirst({
          where: { title: task.title, isRecurring: false, createdById: task.createdById },
          orderBy: { createdAt: 'desc' }
       });
       
-      const msSinceLast = latestClone ? (currentMs - new Date(latestClone.createdAt).getTime()) : msSinceStart;
-      const daysSinceLast = Math.floor(msSinceLast / (1000 * 60 * 60 * 24));
-      
-      if (pattern === 'daily' && daysSinceLast >= 1) shouldCreate = true;
-      if (pattern === 'weekly' && daysSinceLast >= 7) shouldCreate = true;
-      if (pattern === 'biweekly' && daysSinceLast >= 14) shouldCreate = true;
-      if (pattern === 'monthly' && daysSinceLast >= 30) shouldCreate = true;
+      let shouldCreate = false;
+      if (!latestClone) {
+        shouldCreate = true; // First time execution
+      } else {
+        const msSinceLast = currentMs - new Date(latestClone.createdAt).getTime();
+        const daysSinceLast = Math.floor(msSinceLast / (1000 * 60 * 60 * 24));
+        
+        if (pattern === 'daily' && daysSinceLast >= 1) shouldCreate = true;
+        if (pattern === 'weekly' && daysSinceLast >= 7) shouldCreate = true;
+        if (pattern === 'biweekly' && daysSinceLast >= 14) shouldCreate = true;
+        if (pattern === 'monthly' && daysSinceLast >= 30) shouldCreate = true;
+      }
 
       if (shouldCreate) {
-        // Clone the task
         await prisma.task.create({
           data: {
             workspaceId: task.workspaceId,
@@ -79,10 +74,10 @@ export async function GET() {
             weight: task.weight,
             type: task.type,
             assignedToId: task.assignedToId,
-            dueAt: task.dueAt ? new Date(currentMs + 172800000) : null, // Default 2 days for new drop
+            dueAt: task.dueAt ? new Date(currentMs + 172800000) : null,
             refLink: task.refLink,
             createdById: task.createdById,
-            isRecurring: false, // The clone itself is not recurring
+            isRecurring: false,
             events: JSON.stringify([{
               id: `ea${Date.now()}`, type: 'TASK_CREATED', label: `Task cloned from recurring schedule`, by: task.createdById, at: now.toISOString()
             }])
@@ -92,8 +87,60 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ success: true, evaluated: recurringTasks.length, created: createdCount });
+    // 2. CREDENTIAL RENEWAL REMINDERS
+    const workspace = await prisma.workspace.findFirst();
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ['admin', 'superadmin'] } }
+    });
+
+    if (workspace && admins.length > 0) {
+      const creds = await prisma.credential.findMany({
+        where: { renewalDate: { not: null } },
+      });
+
+      for (const cred of creds) {
+        if (!cred.renewalDate) continue;
+        const renewal = new Date(cred.renewalDate);
+        const diffMs = renewal.getTime() - currentMs;
+        const daysUntil = diffMs / (1000 * 60 * 60 * 24);
+        const ceilDays = Math.ceil(daysUntil);
+
+        const sendToAdmins = async (text: string, type: string, threshold: string, lastField: 'reminder4dAt' | 'reminder3dAt' | 'reminder1dAt') => {
+          const lastSent = (cred as any)[lastField]?.getTime() ?? 0;
+          if (currentMs - lastSent > TWENTY_HOURS_MS) {
+            for (const admin of admins) {
+              await prisma.notification.create({
+                data: {
+                  workspaceId: workspace.id,
+                  userId: admin.id,
+                  text,
+                  type,
+                  metadata: JSON.stringify({ credentialId: cred.id, toolName: cred.toolName, renewalDate: cred.renewalDate, threshold }),
+                },
+              });
+            }
+            await prisma.credential.update({ where: { id: cred.id }, data: { [lastField]: now } });
+            reminderCount++;
+          }
+        };
+
+        if (ceilDays === 4) {
+          await sendToAdmins(`⊘ Payment reminder: "${cred.toolName}" renews in 4 days (${cred.renewalDate}).`, 'PAYMENT_REMINDER', '4d', 'reminder4dAt');
+        } else if (ceilDays === 3) {
+          await sendToAdmins(`⊘ Payment reminder: "${cred.toolName}" renews in 3 days. Action required!`, 'PAYMENT_REMINDER', '3d', 'reminder3dAt');
+        } else if (ceilDays === 1) {
+          await sendToAdmins(`🚨 URGENT: "${cred.toolName}" renews TOMORROW. Make sure payment is handled!`, 'PAYMENT_REMINDER', '1d', 'reminder1dAt');
+        }
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      tasksCreated: createdCount, 
+      remindersSent: reminderCount 
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

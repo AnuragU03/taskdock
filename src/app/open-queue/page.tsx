@@ -10,24 +10,31 @@ export default async function OpenQueuePage() {
 
   const tasks = await prisma.task.findMany({
     where: {
-      assignedToId: null,
-      status: { notIn: ['completed', 'cancelled'] }
+      OR: [
+        { assignedToId: null, status: { notIn: ['completed', 'cancelled'] } },
+        { status: 'abandoned' }
+      ]
     },
     include: {
-      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } }
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
     },
     orderBy: { createdAt: 'desc' }
   });
 
+  const abandonedCount = tasks.filter(t => t.status === 'abandoned').length;
+
   const allUsers = await prisma.user.findMany({
-    select: { id: true, name: true, role: true, image: true, color: true, initials: true }
+    select: { id: true, name: true, role: true, image: true, color: true, initials: true, email: true }
   });
 
   return (
-    <div>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--bg0)' }}>
-        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.4px' }}>Open Queue</h1>
-        <p style={{ fontSize: 14, color: 'var(--t3)', maxWidth: 500, marginTop: 4 }}>Unassigned tasks waiting for an owner. Pick up a task to start working on it.</p>
+    <div style={{ padding: '0 0 40px' }}>
+      <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--border)', background: 'var(--bg0)' }}>
+        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 26, fontWeight: 800, color: 'var(--t1)', letterSpacing: '-.6px' }}>Open Queue</h1>
+        <p style={{ fontSize: 14, color: 'var(--t3)', maxWidth: 500, marginTop: 4 }}>
+          Unassigned tasks and <span style={{ color: 'var(--red)', fontWeight: 600 }}>{abandonedCount} abandoned</span> tasks waiting for an owner.
+        </p>
       </div>
       <BoardClient initialTasks={tasks} user={session.user} allUsers={allUsers} hideTitle={true} />
     </div>

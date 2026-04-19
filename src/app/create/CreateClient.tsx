@@ -7,6 +7,7 @@ import { Toast, Lbl, PDot } from '@/components/ui/Atoms';
 import { DLPick, AiBrief } from '@/components/ui/TaskInputs';
 import { CATS } from '@/lib/constants';
 import { createTask } from '@/app/actions/task';
+import BulkImport from '@/components/admin/BulkImport';
 
 export default function CreateClient({ user, allUsers }: { user: any; allUsers: any[] }) {
   const router = useRouter();
@@ -82,7 +83,10 @@ export default function CreateClient({ user, allUsers }: { user: any; allUsers: 
       
       {/* Right side: Form Inputs */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 36px', maxWidth: 640 }}>
-        <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', marginBottom: 22 }}>Create a task</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h1 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-.2px', marginBottom: 0 }}>Create a task</h1>
+          {isAdmin && <BulkImport members={allUsers} />}
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div><Lbl c="Title *"/><input className="inp" value={f.title} onChange={e => set('title', e.target.value)} placeholder="What needs to be created?"/></div>
           <div>

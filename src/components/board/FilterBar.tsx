@@ -45,82 +45,80 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
       
       <Divider />
       
-      {/* Status Dropdown */}
-      <div style={{ position: 'relative' }}>
-        <select 
-          onChange={e => { if (e.target.value) tog('status', e.target.value); e.target.value = ''; }}
-          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--t1)', padding: '6px 28px 6px 12px', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-          value=""
-        >
-          <option value="" disabled>Status...</option>
-          {[['in_progress', 'In Progress'], ['submitted', 'Submitted'], ['open', 'Open'], ['overdue', 'Overdue'], ['under_review', 'Review'], ['completed', 'Done'], ['abandoned', 'Abandoned']].map(([k, l]) => (
-             <option key={k} value={k}>{l}</option>
-          ))}
-        </select>
-        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 12 }}>▼</span>
-      </div>
-      
-      {/* Active Status Pills */}
-      {(filters.status || []).map(k => {
-        const c = SC[k] || SC.draft;
-        return (
-          <button key={k} onClick={() => tog('status', k)} className="fb on" style={{ background: c.bg, color: '#FFF', borderColor: c.tc + '66', fontSize: 14 }}>
-            {c.l} ✕
-          </button>
-        );
-      })}
+      {/* Filters Hub */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Status Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <select 
+            onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, status: [] })); else tog('status', e.target.value); e.target.value = ''; } }}
+            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.status || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120 }}
+            value=""
+          >
+            <option value="" disabled>{(filters.status || []).length ? `${(filters.status || []).length} Status` : 'Status...'}</option>
+            {[['in_progress', 'Started'], ['submitted', 'Submitted'], ['open', 'Open'], ['overdue', 'Overdue'], ['under_review', 'Review'], ['completed', 'Done'], ['abandoned', 'Abandoned']].map(([k, l]) => (
+               <option key={k} value={k}>{l} { (filters.status || []).includes(k) ? '✓' : '' }</option>
+            ))}
+            {(filters.status || []).length > 0 && <option value="CLEAR">— Clear Status —</option>}
+          </select>
+          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 10 }}>▼</span>
+        </div>
 
       <Divider />
       
-      {/* Category Dropdown */}
-      <div style={{ position: 'relative' }}>
-        <select 
-          onChange={e => { if (e.target.value) tog('category', e.target.value); e.target.value = ''; }}
-          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--t1)', padding: '6px 28px 6px 12px', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-          value=""
-        >
-          <option value="" disabled>Category...</option>
-          {CATS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-        </select>
-        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 12 }}>▼</span>
+        {/* Category Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <select 
+            onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, category: [] })); else tog('category', e.target.value); e.target.value = ''; } }}
+            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.category || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 130 }}
+            value=""
+          >
+            <option value="" disabled>{(filters.category || []).length ? `${(filters.category || []).length} Categories` : 'Category...'}</option>
+            {CATS.map(cat => <option key={cat} value={cat}>{cat} { (filters.category || []).includes(cat) ? '✓' : '' }</option>)}
+            {(filters.category || []).length > 0 && <option value="CLEAR">— Clear Category —</option>}
+          </select>
+          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 10 }}>▼</span>
+        </div>
       </div>
 
-      {/* Active Category Pills */}
-      {(filters.category || []).map(cat => (
-        <button key={cat} onClick={() => tog('category', cat)} className="fb on" style={{ fontSize: 14, color: '#FFF' }}>
-          {cat} ✕
-        </button>
-      ))}
+      <Divider />
+      
+        {/* Priority Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <select 
+            onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, priority: [] })); else tog('priority', e.target.value); e.target.value = ''; } }}
+            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.priority || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120 }}
+            value=""
+          >
+            <option value="" disabled>{(filters.priority || []).length ? `${(filters.priority || []).length} Priority` : 'Priority'}</option>
+            {[['urgent', 'Urgent'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']].map(([v, l]) => (
+               <option key={v} value={v}>{l} { (filters.priority || []).includes(v) ? '✓' : '' }</option>
+            ))}
+            {(filters.priority || []).length > 0 && <option value="CLEAR">— Clear Priority —</option>}
+          </select>
+          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 10 }}>▼</span>
+        </div>
+      </div>
+      
+      <Divider />
+      
+      {/* Assignee avatars hub */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        {users.filter(u => (u.role || 'employee').toLowerCase() !== 'admin').slice(0, 10).map(u => {
+          const on = (filters.assignee || []).includes(u.id);
+          return (
+            <button key={u.id} onClick={() => tog('assignee', u.id)} style={{ padding: '2px', borderRadius: '50%', border: `2px solid ${on ? 'var(--accent)' : 'transparent'}`, background: 'transparent', cursor: 'pointer', transition: 'all .12s', flexShrink: 0 }} title={u.name}>
+              <Av user={u} sz={28} />
+            </button>
+          );
+        })}
+      </div>
+      
+      <div style={{ flex: 1 }} />
 
-      <Divider />
-      
-      {/* Priority filters */}
-      {[['urgent', '🔴'], ['high', '🟡'], ['medium', '🔵'], ['low', '⚫']].map(([v, ic]) => (
-        <button key={v} onClick={() => tog('priority', v)} className={`fb${(filters.priority || []).includes(v) ? ' on' : ''}`} style={{ padding: '5px 8px' }} title={v}>
-          {ic}
-        </button>
-      ))}
-      
-      <Divider />
-      
-      {/* Assignee filters (managers/admins only usually, but show non-admins) */}
-      {users.filter(u => (u.role || 'employee').toLowerCase() !== 'admin').map(u => {
-        const on = (filters.assignee || []).includes(u.id);
-        return (
-          <button key={u.id} onClick={() => tog('assignee', u.id)} style={{ padding: '2px 8px 2px 3px', borderRadius: 120, border: `1px solid ${on ? u.color : 'var(--border)'}`, background: on ? u.color + '22' : 'var(--bg2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all .12s', flexShrink: 0 }}>
-            <Av user={u} sz={24} />
-            <span style={{ fontSize: 14, fontWeight: 500, color: on ? u.color : 'var(--t3)' }}>{u.name.split(' ')[0]}</span>
-          </button>
-        );
-      })}
-      
       {n > 0 && (
-        <>
-          <Divider />
-          <button onClick={() => setFilters({})} className="fb" style={{ color: 'var(--red)', borderColor: 'var(--red)44', background: 'var(--red-bg)' }}>
-            ✕ {n}
-          </button>
-        </>
+        <button onClick={() => setFilters({})} className="bg" style={{ padding: '6px 12px', fontSize: 13, fontWeight: 700, color: 'var(--red)', borderColor: 'rgba(239,68,68,.3)', background: 'rgba(239,68,68,.1)' }}>
+          Reset Filters ({n})
+        </button>
       )}
       
       <div style={{ flex: 1 }} />

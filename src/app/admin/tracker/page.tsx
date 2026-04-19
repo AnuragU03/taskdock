@@ -128,31 +128,42 @@ export default async function AdminTrackerPage({ searchParams }: { searchParams:
         </div>
       </div>
       
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 5 }}>
-        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mName, idx) => {
-           const active = (idx + 1) === month;
-           return (
-             <Link 
-               key={mName} 
-               href={`/admin/tracker?month=${idx + 1}&year=${year}`}
-               style={{ 
-                 padding: '6px 14px', 
-                 background: active ? 'var(--accent)' : 'var(--bg2)', 
-                 color: active ? '#000' : 'var(--t2)', 
-                 borderRadius: 20, 
-                 fontSize: 13, 
-                 fontFamily: 'var(--font-sans), sans-serif', 
-                 fontWeight: 700, 
-                 cursor: 'pointer',
-                 textDecoration: 'none',
-                 transition: 'all .1s',
-                 border: active ? 'none' : '1px solid var(--border)'
-               }}
-             >
-               {mName}
-             </Link>
-           );
-        })}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 24, flexWrap: 'wrap' }}>
+        {/* Year Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg1)', padding: '4px 12px', borderRadius: 20, border: '1px solid var(--border)' }}>
+          <Link href={`/admin/tracker?month=${month}&year=${year - 1}`} style={{ color: 'var(--t4)', textDecoration: 'none', fontSize: 18 }}>‹</Link>
+          <span style={{ fontSize: 14, fontFamily: 'var(--font-mono), monospace', fontWeight: 700, color: 'var(--t1)' }}>{year}</span>
+          <Link href={`/admin/tracker?month=${month}&year=${year + 1}`} style={{ color: 'var(--t4)', textDecoration: 'none', fontSize: 18 }}>›</Link>
+        </div>
+
+        {/* Month Selector */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+          {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mName, idx) => {
+             const active = (idx + 1) === month;
+             return (
+               <Link 
+                 key={mName} 
+                 href={`/admin/tracker?month=${idx + 1}&year=${year}`}
+                 style={{ 
+                   padding: '6px 14px', 
+                   background: active ? 'var(--accent)' : 'var(--bg2)', 
+                   color: active ? '#000' : 'var(--t3)', 
+                   borderRadius: 20, 
+                   fontSize: 12, 
+                   fontFamily: 'var(--font-mono), monospace', 
+                   fontWeight: 700, 
+                   cursor: 'pointer',
+                   textDecoration: 'none',
+                   transition: 'all .1s',
+                   border: active ? 'none' : '1px solid var(--border)',
+                   whiteSpace: 'nowrap'
+                 }}
+               >
+                 {mName}
+               </Link>
+             );
+          })}
+        </div>
       </div>
 
       <TrackerGrid users={usersMapped} days={days} year={year} month={month} />

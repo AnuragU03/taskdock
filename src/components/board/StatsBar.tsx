@@ -19,6 +19,7 @@ const SOPTS = [
   { id: 'od', l: 'Overdue', fn: (t: TaskProps[]) => t.filter(x => isOD(x)).length, ac: 'var(--red)' },
   { id: 'done', l: 'Completed', fn: (t: TaskProps[]) => t.filter(x => x.status === 'completed').length, ac: 'var(--green)' },
   { id: 'open', l: 'Open Queue', fn: (t: TaskProps[]) => t.filter(x => x.status === 'open').length, ac: 'var(--blue)' },
+  { id: 'abandoned', l: 'Abandoned', fn: (t: TaskProps[]) => t.filter(x => x.status === 'abandoned').length, ac: 'var(--red)' },
   { id: 'due2d', l: 'Due ≤ 2 days', fn: (t: TaskProps[]) => t.filter(x => {
       if (!x.dueAt) return false;
       const d = new Date(x.dueAt).getTime() - new Date().getTime();

@@ -6,6 +6,11 @@ import DetailClient from "./DetailClient";
 
 export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  
+  if (!id || id === 'undefined') {
+    notFound();
+  }
+
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {

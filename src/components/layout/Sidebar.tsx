@@ -126,7 +126,7 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = open ? 'var(--amber-bg)' : 'transparent'; }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 14 }}>⊛</span>
+          <span style={{ fontSize: 14 }}>◈</span>
           Broadcast
         </span>
         <span style={{ fontSize: 10, opacity: 0.7 }}>{open ? '▲' : '▼'}</span>
@@ -406,7 +406,7 @@ export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: 
       {/* START MY DAY / CLOCK IN-OUT */}
       {!isClockedIn && (
         <div style={{ margin: '10px 7px 0', padding: '14px', background: 'linear-gradient(135deg,#061A0E,#0D2818)', border: '1px solid var(--green)', borderRadius: 14, boxShadow: '0 4px 22px rgba(34,197,94,.18)' }} className="fu">
-          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 10 }}>☀ Good morning</div>
+          <div style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 10 }}>◈ Good morning</div>
           <button onClick={handleClockIn} disabled={loading}
             style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'var(--green)', color: '#000', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 800, fontSize: 16, letterSpacing: '-.2px', transition: 'all .15s', boxShadow: '0 2px 12px rgba(34,197,94,.35)' }}>
             {loading ? '◌ Starting…' : '▶ Start My Day'}
