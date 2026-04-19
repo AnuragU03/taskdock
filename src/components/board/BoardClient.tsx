@@ -6,7 +6,7 @@ import { FilterBar } from './FilterBar';
 import { GridV, KanV, ListView } from './BoardViews';
 import { useRouter } from 'next/navigation';
 
-export default function BoardClient({ initialTasks, user, allUsers, title = 'Creative Board', hideTitle = false }: { initialTasks: any[]; user: any; allUsers: any[]; title?: string; hideTitle?: boolean }) {
+export default function BoardClient({ initialTasks, user, allUsers, title = 'Creative Board', hideTitle = false, hideStats = false, isOpenQueue = false }: { initialTasks: any[]; user: any; allUsers: any[]; title?: string; hideTitle?: boolean; hideStats?: boolean; isOpenQueue?: boolean }) {
   const [filters, setFilters] = useState<Record<string, string[]>>({});
   const [vm, setVm] = useState('board');
   const [q, setQ] = useState('');
@@ -75,7 +75,7 @@ export default function BoardClient({ initialTasks, user, allUsers, title = 'Cre
 
   return (
     <div style={{ position: 'relative' }}>
-      <StatsBar tasks={tasks} userRole={user.role} />
+      {!hideStats && <StatsBar tasks={tasks} userRole={user.role} minimal={isOpenQueue} />}
       
       {!hideTitle && (
         <div style={{ padding: '16px 24px', background: 'var(--bg1)', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)' }}>
@@ -103,6 +103,7 @@ export default function BoardClient({ initialTasks, user, allUsers, title = 'Cre
         users={allUsers} 
         vm={vm} 
         setVm={setVm} 
+        isOpenQueue={isOpenQueue}
       />
       
       {vm === 'board' && <GridV tasks={tasks} onClickTask={go} />}

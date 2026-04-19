@@ -36,7 +36,7 @@ export default async function OpenQueuePage() {
           Unassigned tasks and <span style={{ color: 'var(--red)', fontWeight: 600 }}>{abandonedCount} abandoned</span> tasks waiting for an owner.
         </p>
       </div>
-      <BoardClient initialTasks={tasks} user={session.user} allUsers={allUsers} hideTitle={true} />
+      <BoardClient initialTasks={tasks} user={session.user} allUsers={allUsers} hideTitle={true} isOpenQueue={true} />
     </div>
   );
 }

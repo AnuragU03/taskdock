@@ -72,7 +72,10 @@ export const Topbar = ({ user, unreadNotifsCount = 0 }: { user: any, unreadNotif
             onClick={() => setShowNotifs(!showNotifs)}
             style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '50%', background: 'var(--bg1)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--t2)', transition: 'all .15s' }}
           >
-            <span style={{ fontSize: 18 }}>🔔</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
             {unreadNotifsCount > 0 && (
               <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--accent)', color: '#fff', fontSize: 10, borderRadius: 10, padding: '1px 5px', fontFamily: 'var(--font-mono), monospace', minWidth: 14, textAlign: 'center', border: '2px solid var(--bg0)' }}>
                 {unreadNotifsCount}

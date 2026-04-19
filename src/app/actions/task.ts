@@ -283,7 +283,7 @@ export async function abandonTask(taskId: string, reason: string, penalty: numbe
   const task = await prisma.task.update({
     where: { id: taskId },
     data: {
-      status: 'open',
+      status: 'abandoned',
       isAbandoned: true,
       abandonedAt: new Date(),
       abandonReason: reason,

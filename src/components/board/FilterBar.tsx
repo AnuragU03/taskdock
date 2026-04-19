@@ -20,9 +20,10 @@ interface FilterBarProps {
   users: UserProps[];
   vm: string;
   setVm: (vm: string) => void;
+  isOpenQueue?: boolean;
 }
 
-export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: FilterBarProps) => {
+export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm, isOpenQueue }: FilterBarProps) => {
   const tog = (k: string, v: string) => setFilters(f => {
     const c = f[k] || [];
     return { ...f, [k]: c.includes(v) ? c.filter(x => x !== v) : [...c, v] };
@@ -51,7 +52,7 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
         <div style={{ position: 'relative' }}>
           <select 
             onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, status: [] })); else tog('status', e.target.value); e.target.value = ''; } }}
-            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.status || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120 }}
+            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.status || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120, outline: 'none' }}
             value=""
           >
             <option value="" disabled>{(filters.status || []).length ? `${(filters.status || []).length} Status` : 'Status...'}</option>
@@ -69,7 +70,7 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
         <div style={{ position: 'relative' }}>
           <select 
             onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, category: [] })); else tog('category', e.target.value); e.target.value = ''; } }}
-            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.category || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 130 }}
+            style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.category || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 130, outline: 'none' }}
             value=""
           >
             <option value="" disabled>{(filters.category || []).length ? `${(filters.category || []).length} Categories` : 'Category...'}</option>
@@ -85,7 +86,7 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
       <div style={{ position: 'relative' }}>
         <select 
           onChange={e => { if (e.target.value) { if (e.target.value === 'CLEAR') setFilters(prev => ({ ...prev, priority: [] })); else tog('priority', e.target.value); e.target.value = ''; } }}
-          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.priority || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120 }}
+          style={{ appearance: 'none', background: 'var(--bg3)', border: '1px solid var(--border)', color: (filters.priority || []).length ? 'var(--accent)' : 'var(--t1)', padding: '7px 28px 7px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', minWidth: 120, outline: 'none' }}
           value=""
         >
           <option value="" disabled>{(filters.priority || []).length ? `${(filters.priority || []).length} Priority` : 'Priority'}</option>
@@ -97,19 +98,32 @@ export const FilterBar = ({ filters, setFilters, userRole, users, vm, setVm }: F
         <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--t4)', fontSize: 10 }}>▼</span>
       </div>
 
-      <Divider />
-      
-      {/* Assignee avatars hub */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        {users.filter(u => (u.role || 'employee').toLowerCase() !== 'admin').slice(0, 10).map(u => {
-          const on = (filters.assignee || []).includes(u.id);
-          return (
-            <button key={u.id} onClick={() => tog('assignee', u.id)} style={{ padding: '2px', borderRadius: '50%', border: `2px solid ${on ? 'var(--accent)' : 'transparent'}`, background: 'transparent', cursor: 'pointer', transition: 'all .12s', flexShrink: 0 }} title={u.name}>
-              <Av user={u} sz={28} />
-            </button>
-          );
-        })}
-      </div>
+      {!isOpenQueue && (
+        <>
+          <Divider />
+          {/* Assignee hub with Names restored */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {users.filter(u => (u.role || 'employee').toLowerCase() !== 'admin').slice(0, 10).map(u => {
+              const on = (filters.assignee || []).includes(u.id);
+              return (
+                <button 
+                  key={u.id} 
+                  onClick={() => tog('assignee', u.id)} 
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px 4px 4px', borderRadius: 20, 
+                    border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, 
+                    background: on ? 'var(--accent-dim)' : 'var(--bg2)', 
+                    cursor: 'pointer', transition: 'all .12s', flexShrink: 0 
+                  }}
+                >
+                  <Av user={u} sz={24} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: on ? 'var(--accent)' : 'var(--t3)', paddingRight: 2 }}>{u.name.split(' ')[0]}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
       
       <div style={{ flex: 1 }} />
 

@@ -14,7 +14,7 @@ const isOD = (t: TaskProps) => !['completed', 'cancelled'].includes(t.status) &&
 const SOPTS = [
   { id: 'total', l: 'Total', fn: (t: TaskProps[]) => t.length },
   { id: 'active', l: 'Active', fn: (t: TaskProps[]) => t.filter(x => !['completed', 'cancelled'].includes(x.status)).length },
-  { id: 'ip', l: 'In Progress', fn: (t: TaskProps[]) => t.filter(x => x.status === 'in_progress').length },
+  { id: 'ip', l: 'In Progress', fn: (t: TaskProps[]) => t.filter(x => x.status === 'in_progress').length, ac: 'var(--blue)' },
   { id: 'sub', l: 'Pending Review', fn: (t: TaskProps[]) => t.filter(x => x.status === 'submitted').length, ac: 'var(--amber)' },
   { id: 'od', l: 'Overdue', fn: (t: TaskProps[]) => t.filter(x => isOD(x)).length, ac: 'var(--red)' },
   { id: 'done', l: 'Completed', fn: (t: TaskProps[]) => t.filter(x => x.status === 'completed').length, ac: 'var(--green)' },
@@ -30,11 +30,14 @@ const SOPTS = [
 interface StatsBarProps {
   tasks: TaskProps[];
   userRole: string;
+  minimal?: boolean;
 }
 
-export const StatsBar = ({ tasks, userRole }: StatsBarProps) => {
+export const StatsBar = ({ tasks, userRole, minimal }: StatsBarProps) => {
   const role = (userRole || 'employee').toLowerCase();
-  const def = role === 'admin' ? ['total', 'active', 'od', 'done'] : role === 'manager' ? ['sub', 'ip', 'od', 'due2d'] : ['ip', 'sub', 'done', 'due2d'];
+  const def = minimal 
+    ? ['total', 'abandoned', 'od'] 
+    : (role === 'admin' ? ['total', 'active', 'od', 'done'] : role === 'manager' ? ['sub', 'ip', 'od', 'due2d'] : ['ip', 'sub', 'done', 'due2d']);
   const [vis, setVis] = useState<string[]>(def);
   const [edit, setEdit] = useState(false);
   
@@ -42,20 +45,20 @@ export const StatsBar = ({ tasks, userRole }: StatsBarProps) => {
     <div style={{ background: 'var(--bg1)', borderBottom: '1px solid var(--border)', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
       <div style={{ display: 'flex', gap: 9, flex: 1, flexWrap: 'wrap' }}>
         {SOPTS.filter(o => vis.includes(o.id)).map(o => (
-          <div key={o.id} style={{ background: 'var(--bg3)', borderRadius: 12, padding: '9px 14px', minWidth: 80, flexShrink: 0 }}>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.09em', marginBottom: 4 }}>{o.l}</div>
-            <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: o.ac || 'var(--t1)', lineHeight: 1 }}>{o.fn(tasks)}</div>
+          <div key={o.id} style={{ background: 'var(--bg3)', borderRadius: 12, padding: minimal ? '7px 12px' : '9px 14px', minWidth: minimal ? 60 : 80, flexShrink: 0 }}>
+            <div style={{ fontSize: minimal ? 10 : 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.09em', marginBottom: 4 }}>{o.l}</div>
+            <div style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: minimal ? 16 : 20, fontWeight: 700, color: o.ac || 'var(--t1)', lineHeight: 1 }}>{o.fn(tasks)}</div>
           </div>
         ))}
       </div>
-      <button onClick={() => setEdit(true)} style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 7, padding: '6px 9px', cursor: 'pointer', color: 'var(--t3)', fontSize: 15, flexShrink: 0 }}>⚙</button>
+      {!minimal && <button onClick={() => setEdit(true)} style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 7, padding: '6px 9px', cursor: 'pointer', color: 'var(--t3)', fontSize: 15, flexShrink: 0 }}>⚙</button>}
       
       {edit && (
         <div className="overlay" onClick={e => e.target === e.currentTarget && setEdit(false)}>
           <div className="modal" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ fontFamily: 'var(--font-sans), sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--t1)' }}>Customize stats</h3>
-              <button onClick={() => setEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t3)' }}>×</button>
+              <button onClick={() => setEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, padding: '4px 8px', color: 'var(--t3)', lineHeight: 1 }}>×</button>
             </div>
             <p style={{ fontSize: 13, color: 'var(--t3)', marginBottom: 14 }}>Choose up to 6 metrics for your header.</p>
             {SOPTS.map(o => {
