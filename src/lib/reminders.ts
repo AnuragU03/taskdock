@@ -1,6 +1,5 @@
 import { prisma } from "./prisma";
-
-const TWENTY_HOURS_MS = 20 * 60 * 60 * 1000;
+import { TWENTY_HOURS_MS } from "./constants";
 
 /**
  * Called from layout.tsx for superadmin/admin on login.
@@ -96,7 +95,5 @@ export async function checkAndSendRenewalReminders(
         }
       }
     }
-  } catch (err) {
-    console.error("[RenewalReminder]", err);
-  }
+  } catch { /* silent — non-blocking */ }
 }

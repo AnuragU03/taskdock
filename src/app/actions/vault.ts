@@ -132,7 +132,8 @@ export async function markCredentialRenewed(credentialId: string, notifId?: stri
     where: { id: credentialId },
     data: {
       renewalDate: newRenewalDate,
-      reminder4dAt: null,  // reset so next cycle gets fresh reminders
+      reminder4dAt: null,  // reset all reminder timestamps so next cycle gets fresh alerts
+      reminder3dAt: null,
       reminder1dAt: null,
     },
   });

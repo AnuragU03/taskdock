@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-const TWENTY_HOURS_MS = 20 * 60 * 60 * 1000;
+import { TWENTY_HOURS_MS } from "@/lib/constants";
 
 export async function GET() {
   try {

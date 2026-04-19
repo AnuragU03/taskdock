@@ -45,3 +45,6 @@ export const KCOLS = [
   {id:'submitted',l:'Submitted'},
   {id:'completed',l:'Done'}
 ];
+
+/** Deduplication window for reminder notifications — 20 hours in ms */
+export const TWENTY_HOURS_MS = 20 * 60 * 60 * 1000;
