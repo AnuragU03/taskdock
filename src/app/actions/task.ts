@@ -94,6 +94,10 @@ export async function updateTask(taskId: string, data: any) {
         ...existingEvents,
         { id: `eu${Date.now()}`, type: 'TASK_UPDATED', label: 'Task updated', by: (session.user as any).id, at: new Date().toISOString() }
       ])
+    },
+    include: {
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
     }
   });
 
@@ -119,6 +123,10 @@ export async function pickupTask(taskId: string) {
         ...existingEvents,
         { id: `ep${Date.now()}`, type: 'TASK_PICKED_UP', label: `Picked up by ${session.user.name}`, by: (session.user as any).id, at: new Date().toISOString() }
       ])
+    },
+    include: {
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
     }
   });
 
@@ -161,6 +169,10 @@ export async function submitWork(taskId: string, subText: string, subLink: strin
         ...existingEvents,
         { id: `es${Date.now()}`, type: 'TASK_SUBMITTED', label: 'Work submitted', by: (session.user as any).id, at: new Date().toISOString() }
       ])
+    },
+    include: {
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
     }
   });
 
@@ -256,7 +268,14 @@ export async function reviewTask(
     ])
   };
 
-  const task = await prisma.task.update({ where: { id: taskId }, data });
+  const task = await prisma.task.update({ 
+    where: { id: taskId }, 
+    data,
+    include: {
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
+    }
+  });
 
   if (approved && taskObj?.assignedToId && brownieChange !== 0) {
     await prisma.user.update({
@@ -293,6 +312,10 @@ export async function abandonTask(taskId: string, reason: string, penalty: numbe
         ...existingEvents,
         { id: `eab${Date.now()}`, type: 'TASK_ABANDONED', label: `Abandoned by ${session.user.name}${reason ? `: ${reason}` : ''}`, by: (session.user as any).id, at: new Date().toISOString() }
       ])
+    },
+    include: {
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
     }
   });
 
@@ -325,6 +348,10 @@ export async function reopenTask(taskId: string) {
         ...existingEvents,
         { id: `ero${Date.now()}`, type: 'TASK_REOPENED', label: 'Reopened', by: (session.user as any).id, at: new Date().toISOString() }
       ])
+    },
+    include: {
+      assignee: { select: { id: true, name: true, image: true, color: true, initials: true } },
+      createdBy: { select: { id: true, name: true, image: true, color: true, initials: true } }
     }
   });
 
