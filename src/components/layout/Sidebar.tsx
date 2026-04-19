@@ -42,30 +42,18 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Fetch users on open
   useEffect(() => {
     if (!open || allUsers.length > 0) return;
     fetch('/api/broadcast')
       .then(r => r.json())
-      .then((users: MentionUser[]) => {
-        setAllUsers(users.filter(u => u.id !== currentUserId));
-      })
+      .then((users: MentionUser[]) => setAllUsers(users.filter(u => u.id !== currentUserId)))
       .catch(() => {});
   }, [open, currentUserId, allUsers.length]);
 
-  // Filter suggestions as user types
   useEffect(() => {
-    if (!mention.trim()) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
+    if (!mention.trim()) { setSuggestions([]); setShowSuggestions(false); return; }
     const q = mention.toLowerCase();
-    const filtered = allUsers.filter(
-      u =>
-        u.name?.toLowerCase().includes(q) &&
-        !tagged.some(t => t.id === u.id)
-    );
+    const filtered = allUsers.filter(u => u.name?.toLowerCase().includes(q) && !tagged.some(t => t.id === u.id));
     setSuggestions(filtered.slice(0, 6));
     setShowSuggestions(filtered.length > 0);
   }, [mention, allUsers, tagged]);
@@ -77,9 +65,7 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
     textareaRef.current?.focus();
   };
 
-  const removeTag = (id: string) => {
-    setTagged(prev => prev.filter(u => u.id !== id));
-  };
+  const removeTag = (id: string) => setTagged(prev => prev.filter(u => u.id !== id));
 
   const handleSend = async () => {
     if (!message.trim() || tagged.length === 0) return;
@@ -100,9 +86,23 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
     setSending(false);
   };
 
+  const INP: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bg1)',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    padding: '7px 10px',
+    fontSize: 12,
+    fontFamily: 'var(--font-mono), monospace',
+    color: 'var(--t1)',
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color .12s',
+  };
+
   return (
     <div style={{ margin: '0 7px 6px' }}>
-      {/* Toggle button */}
+      {/* Toggle */}
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -110,89 +110,75 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '9px 12px',
+          padding: '8px 11px',
           borderRadius: 10,
-          border: '1px solid rgba(251,191,36,.3)',
-          background: open ? 'var(--amber-bg)' : 'transparent',
-          color: 'var(--amber)',
-          fontFamily: 'var(--font-mono), sans-serif',
-          fontSize: 12,
+          border: `1px solid ${open ? 'var(--border2)' : 'var(--border)'}`,
+          background: open ? 'var(--bg2)' : 'transparent',
+          color: 'var(--t3)',
+          fontFamily: 'var(--font-mono), monospace',
+          fontSize: 11,
           cursor: 'pointer',
           transition: 'all .15s',
-          letterSpacing: '.04em',
+          letterSpacing: '.05em',
           textTransform: 'uppercase',
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,.1)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = open ? 'var(--amber-bg)' : 'transparent'; }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg2)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = open ? 'var(--bg2)' : 'transparent'; }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 14 }}>◈</span>
+          {/* SVG megaphone/broadcast icon */}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 8.5c0 2.5-1.5 4.5-4 5.5v-11c2.5 1 4 3 4 5.5z"/>
+            <path d="M18 14v5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-5"/>
+            <path d="M4 9H2a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2l10 4V5L4 9z"/>
+          </svg>
           Broadcast
         </span>
-        <span style={{ fontSize: 10, opacity: 0.7 }}>{open ? '▲' : '▼'}</span>
+        <span style={{ fontSize: 9, opacity: 0.5 }}>{open ? '▲' : '▼'}</span>
       </button>
 
-      {/* Panel */}
+      {/* Expanded panel */}
       {open && (
-        <div
-          style={{
-            marginTop: 8,
-            background: 'linear-gradient(135deg, #120D00, #1A1200)',
-            border: '1px solid #F59E0B33',
-            borderRadius: 12,
-            padding: 12,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 9,
-          }}
-        >
-          {/* Tagged users */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, minHeight: 24 }}>
-            {tagged.map(u => (
-              <span
-                key={u.id}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'rgba(245,158,11,.15)',
-                  border: '1px solid #F59E0B55',
-                  borderRadius: 20,
-                  padding: '2px 8px 2px 6px',
-                  fontSize: 11,
-                  color: '#F59E0B',
+        <div style={{
+          marginTop: 6,
+          background: 'var(--bg2)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          padding: 11,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+        }}>
+          {/* Tagged user pills */}
+          {tagged.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              {tagged.map(u => (
+                <span key={u.id} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  background: 'var(--bg3)', border: '1px solid var(--border2)',
+                  borderRadius: 20, padding: '2px 7px 2px 5px',
+                  fontSize: 11, color: 'var(--t2)',
                   fontFamily: 'var(--font-mono), monospace',
-                }}
-              >
-                <span
-                  style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    background: u.color || '#F59E0B',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 8,
-                    color: '#fff',
-                    fontWeight: 700,
-                    flexShrink: 0,
-                  }}
-                >
-                  {u.initials || u.name?.[0]?.toUpperCase() || '?'}
+                }}>
+                  <span style={{
+                    width: 15, height: 15, borderRadius: '50%',
+                    background: u.color || 'var(--accent)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 8, color: '#fff', fontWeight: 700, flexShrink: 0,
+                  }}>
+                    {u.initials || u.name?.[0]?.toUpperCase() || '?'}
+                  </span>
+                  @{u.name?.split(' ')[0]}
+                  <button onClick={() => removeTag(u.id)}
+                    style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}>
+                    ×
+                  </button>
                 </span>
-                @{u.name?.split(' ')[0]}
-                <button
-                  onClick={() => removeTag(u.id)}
-                  style={{ background: 'none', border: 'none', color: '#F59E0B', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* @mention input */}
+          {/* @mention input + dropdown */}
           <div style={{ position: 'relative' }}>
             <input
               placeholder="@mention someone..."
@@ -200,72 +186,39 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
               onChange={e => setMention(e.target.value)}
               onFocus={() => { if (suggestions.length) setShowSuggestions(true); }}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              style={{
-                width: '100%',
-                background: 'rgba(245,158,11,.06)',
-                border: '1px solid #F59E0B33',
-                borderRadius: 8,
-                padding: '7px 10px',
-                fontSize: 12,
-                fontFamily: 'var(--font-mono), monospace',
-                color: '#F59E0B',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
+              style={INP}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onBlurCapture={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             />
             {showSuggestions && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: '#1A1200',
-                  border: '1px solid #F59E0B44',
-                  borderRadius: 8,
-                  zIndex: 999,
-                  marginTop: 3,
-                  overflow: 'hidden',
-                  boxShadow: '0 8px 24px rgba(0,0,0,.5)',
-                }}
-              >
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: 'var(--bg1)', border: '1px solid var(--border2)',
+                borderRadius: 8, zIndex: 999, marginTop: 3, overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(0,0,0,.6)',
+              }}>
                 {suggestions.map(u => (
-                  <div
-                    key={u.id}
-                    onMouseDown={() => addTag(u)}
-                    style={{
-                      padding: '7px 10px',
-                      fontSize: 12,
-                      fontFamily: 'var(--font-mono), monospace',
-                      color: '#F59E0B',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 7,
-                      borderBottom: '1px solid #F59E0B22',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(245,158,11,.1)'; }}
+                  <div key={u.id} onMouseDown={() => addTag(u)} style={{
+                    padding: '7px 10px', fontSize: 12,
+                    fontFamily: 'var(--font-mono), monospace',
+                    color: 'var(--t2)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    borderBottom: '1px solid var(--border)',
+                    transition: 'background .1s',
+                  }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg2)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
-                    <span
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: '50%',
-                        background: u.color || '#F59E0B',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 9,
-                        color: '#fff',
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
+                    <span style={{
+                      width: 20, height: 20, borderRadius: '50%',
+                      background: u.color || 'var(--accent)',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 9, color: '#fff', fontWeight: 700, flexShrink: 0,
+                    }}>
                       {u.initials || u.name?.[0]?.toUpperCase() || '?'}
                     </span>
                     {u.name}
-                    <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 'auto' }}>{u.role}</span>
+                    <span style={{ fontSize: 10, color: 'var(--t4)', marginLeft: 'auto' }}>{u.role}</span>
                   </div>
                 ))}
               </div>
@@ -279,48 +232,41 @@ function BroadcastPanel({ currentUserId }: { currentUserId: string }) {
             value={message}
             onChange={e => setMessage(e.target.value)}
             rows={3}
-            style={{
-              width: '100%',
-              background: 'rgba(245,158,11,.06)',
-              border: '1px solid #F59E0B33',
-              borderRadius: 8,
-              padding: '8px 10px',
-              fontSize: 12,
-              fontFamily: 'var(--font-sans), sans-serif',
-              color: 'var(--t1)',
-              outline: 'none',
-              resize: 'none',
-              boxSizing: 'border-box',
-              lineHeight: 1.5,
-            }}
-            onFocus={e => { e.currentTarget.style.borderColor = '#F59E0B88'; }}
-            onBlur={e => { e.currentTarget.style.borderColor = '#F59E0B33'; }}
+            style={{ ...INP, resize: 'none', lineHeight: 1.5, fontFamily: 'var(--font-sans), sans-serif' }}
+            onFocusCapture={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+            onBlurCapture={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
           />
 
-          {/* Send button */}
+          {/* Send */}
           {sent ? (
-            <div style={{ textAlign: 'center', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', padding: '6px 0' }}>
-              ✓ Broadcast sent!
+            <div style={{ textAlign: 'center', fontSize: 12, fontFamily: 'var(--font-mono), monospace', color: 'var(--green)', padding: '5px 0' }}>
+              ✓ Broadcast sent
             </div>
           ) : (
             <button
               onClick={handleSend}
               disabled={sending || !message.trim() || tagged.length === 0}
               style={{
-                width: '100%',
-                padding: '9px 0',
-                borderRadius: 8,
-                border: 'none',
+                width: '100%', padding: '8px 0', borderRadius: 8, border: 'none',
                 cursor: sending || !message.trim() || tagged.length === 0 ? 'not-allowed' : 'pointer',
-                background: sending || !message.trim() || tagged.length === 0 ? '#F59E0B44' : '#F59E0B',
-                color: sending || !message.trim() || tagged.length === 0 ? '#F59E0B88' : '#000',
+                background: sending || !message.trim() || tagged.length === 0 ? 'var(--bg3)' : 'var(--accent)',
+                color: sending || !message.trim() || tagged.length === 0 ? 'var(--t4)' : '#fff',
                 fontFamily: 'var(--font-sans), sans-serif',
-                fontWeight: 700,
-                fontSize: 13,
+                fontWeight: 600, fontSize: 13,
                 transition: 'all .15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
-              {sending ? '◌ Sending…' : '⊛ Send Broadcast →'}
+              {sending ? (
+                <>
+                  <span className="spin" style={{ display: 'inline-block', fontSize: 12 }}>◌</span> Sending…
+                </>
+              ) : (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  Send Broadcast
+                </>
+              )}
             </button>
           )}
         </div>
@@ -347,25 +293,14 @@ function EmployeeBroadcasts({ currentUserId }: { currentUserId: string }) {
   const load = () => {
     fetch('/api/broadcast/active')
       .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) setMessages(data);
-      })
+      .then(data => { if (Array.isArray(data)) setMessages(data); })
       .catch(() => {});
   };
 
   useEffect(() => { load(); }, []);
-
-  // Poll every 30s for new messages
+  useEffect(() => { const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
   useEffect(() => {
-    const t = setInterval(load, 30000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages]);
 
   const sendReply = async (notifId: string) => {
@@ -386,9 +321,18 @@ function EmployeeBroadcasts({ currentUserId }: { currentUserId: string }) {
 
   if (messages.length === 0) return null;
 
+  // Group messages by senderId — all broadcasts from same admin = one thread
+  const sorted = [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const threadMap = new Map<string, { senderName: string; msgs: any[] }>();
+  for (const msg of sorted) {
+    const key = msg.senderId || msg.senderName || 'admin';
+    if (!threadMap.has(key)) threadMap.set(key, { senderName: msg.senderName || 'Admin', msgs: [] });
+    threadMap.get(key)!.msgs.push(msg);
+  }
+  const threads = Array.from(threadMap.entries());
+
   return (
     <div style={{ margin: '0 7px 8px', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
       <button
         onClick={() => setOpen(o => !o)}
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--t3)', fontSize: 11, fontFamily: 'var(--font-mono), monospace', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer', marginBottom: 5 }}
@@ -403,79 +347,78 @@ function EmployeeBroadcasts({ currentUserId }: { currentUserId: string }) {
       </button>
 
       {open && (
-        <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {/* Message feed */}
-          <div ref={chatRef} style={{ maxHeight: 280, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0, padding: '8px 0' }}>
-            {[...messages].reverse().map(msg => {
-              const myAck = msg.acknowledgedBy?.find((a: any) => a.userId === currentUserId);
-              const alreadyReplied = !!myAck;
+        <div ref={chatRef} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden auto', maxHeight: 340, display: 'flex', flexDirection: 'column' }}>
+          {threads.map(([senderId, thread]) => (
+            <div key={senderId} style={{ borderBottom: '1px solid var(--border)', padding: '10px 10px 8px' }}>
+              {/* Sender header — shown once per thread */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bg4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--t3)', flexShrink: 0 }}>
+                  {thread.senderName.charAt(0).toUpperCase()}
+                </div>
+                <span style={{ fontSize: 11, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', fontWeight: 600 }}>{thread.senderName}</span>
+              </div>
 
-              return (
-                <div key={msg.id} style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {/* Admin bubble */}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--bg4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--t3)', flexShrink: 0 }}>
-                      {(msg.senderName || 'A').charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, fontFamily: 'var(--font-mono), monospace', color: 'var(--t4)', marginBottom: 3 }}>
-                        {msg.senderName} · {fmtTime(msg.createdAt)}
-                      </div>
-                      <div style={{ background: 'var(--bg3)', borderRadius: '0 10px 10px 10px', padding: '8px 10px', fontSize: 13, color: 'var(--t1)', lineHeight: 1.55 }}>
+              {/* All messages as sequential bubbles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingLeft: 31 }}>
+                {thread.msgs.map((msg, idx) => {
+                  const myAck = msg.acknowledgedBy?.find((a: any) => a.userId === currentUserId);
+                  const alreadyReplied = !!myAck;
+                  const isLast = idx === thread.msgs.length - 1;
+
+                  return (
+                    <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {/* Admin bubble */}
+                      <div style={{ alignSelf: 'flex-start', background: 'var(--bg3)', borderRadius: '0 10px 10px 10px', padding: '7px 10px', fontSize: 13, color: 'var(--t1)', lineHeight: 1.5, maxWidth: '90%' }}>
                         {msg.message}
                       </div>
-                    </div>
-                  </div>
+                      <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace' }}>{fmtTime(msg.createdAt)}</span>
 
-                  {/* My reply (if already sent) */}
-                  {alreadyReplied && myAck.replyText && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                      <div>
-                        <div style={{ background: 'var(--accent)', borderRadius: '10px 0 10px 10px', padding: '7px 10px', fontSize: 13, color: '#fff', lineHeight: 1.55, maxWidth: 154 }}>
-                          {myAck.replyText}
+                      {/* My reply bubble */}
+                      {alreadyReplied && myAck.replyText && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: 2 }}>
+                          <div style={{ background: 'var(--accent)', borderRadius: '10px 0 10px 10px', padding: '6px 10px', fontSize: 13, color: '#fff', lineHeight: 1.5, maxWidth: '82%' }}>
+                            {myAck.replyText}
+                          </div>
+                          <span style={{ fontSize: 10, color: 'var(--t4)', marginTop: 2, fontFamily: 'var(--font-mono), monospace' }}>✓ Sent</span>
                         </div>
-                        <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 2, textAlign: 'right', fontFamily: 'var(--font-mono), monospace' }}>
-                          ✓ Sent
+                      )}
+                      {alreadyReplied && !myAck.replyText && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', fontStyle: 'italic' }}>✓ Acknowledged</span>
                         </div>
-                      </div>
-                    </div>
-                  )}
+                      )}
 
-                  {/* Acknowledged but no reply */}
-                  {alreadyReplied && !myAck.replyText && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--font-mono), monospace', fontStyle: 'italic' }}>✓ Acknowledged</span>
+                      {/* Reply input — only on last unreplied message */}
+                      {!alreadyReplied && isLast && (
+                        <div style={{ display: 'flex', gap: 5, alignItems: 'center', marginTop: 3 }}>
+                          <input
+                            value={replies[msg.id] || ''}
+                            onChange={e => setReplies(r => ({ ...r, [msg.id]: e.target.value }))}
+                            onKeyDown={e => { if (e.key === 'Enter') sendReply(msg.id); }}
+                            placeholder="Reply..."
+                            style={{ flex: 1, background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 20, padding: '5px 10px', fontSize: 12, color: 'var(--t1)', outline: 'none', fontFamily: 'var(--font-sans), sans-serif' }}
+                          />
+                          <button
+                            onClick={() => sendReply(msg.id)}
+                            disabled={sending[msg.id] || !replies[msg.id]?.trim()}
+                            style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: !replies[msg.id]?.trim() ? 0.4 : 1 }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Reply input (if not yet replied) */}
-                  {!alreadyReplied && (
-                    <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end', marginTop: 2 }}>
-                      <input
-                        value={replies[msg.id] || ''}
-                        onChange={e => setReplies(r => ({ ...r, [msg.id]: e.target.value }))}
-                        onKeyDown={e => { if (e.key === 'Enter') sendReply(msg.id); }}
-                        placeholder="Reply..."
-                        style={{ flex: 1, background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 20, padding: '5px 10px', fontSize: 12, color: 'var(--t1)', outline: 'none', fontFamily: 'var(--font-sans), sans-serif' }}
-                      />
-                      <button
-                        onClick={() => sendReply(msg.id)}
-                        disabled={sending[msg.id] || !replies[msg.id]?.trim()}
-                        style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: !replies[msg.id]?.trim() ? 0.4 : 1 }}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
+
 
 export const Sidebar = ({ user, unreadNotifsCount, todayAttendance, earnings }: SidebarProps) => {
   const pathname = usePathname();

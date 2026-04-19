@@ -74,27 +74,31 @@ function playSinglePing(ctx: AudioContext, freq: number) {
   playBell(ctx, freq, ctx.currentTime, 0.6);
 }
 
-function playPing(type: string) {
+// playPing must be async so it can await ctx.resume() before scheduling oscillators
+async function playPing(type: string) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    // MUST await resume — otherwise oscillators schedule on a suspended context = silence
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
 
     switch (type) {
       case 'BROADCAST':
-        playTriTone(ctx, 783); // G5 → B5 → D#6, two-tone alert
+        playTriTone(ctx, 783);
         break;
       case 'PAYMENT_REMINDER':
-        playTriTone(ctx, 880); // A5 → C#6 → F6, urgent higher pitch
+        playTriTone(ctx, 880);
         break;
       case 'CREDENTIAL_SHARED':
-        playSinglePing(ctx, 1047); // C6 — soft single chime
+        playSinglePing(ctx, 1047);
         break;
       case 'OPEN_QUEUE_POST':
-        playSinglePing(ctx, 880); // A5 — gentle single chime
+        playSinglePing(ctx, 880);
         break;
       default:
-        playSinglePing(ctx, 660); // E5 — neutral chime
+        playSinglePing(ctx, 660);
     }
   } catch { /* silent — audio blocked by browser policy */ }
 }
@@ -124,6 +128,8 @@ export function LiveToast() {
   const [toasts, setToasts] = useState<(ToastNotif & { expiresAt: number })[]>([]);
   const seenIdsRef = useRef<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Skip sound on first poll — AudioContext needs a user gesture first
+  const isInitialPollRef = useRef(true);
 
   const poll = useCallback(async () => {
     try {
@@ -144,18 +150,22 @@ export function LiveToast() {
           ...prev,
           ...newOnes.map((n) => ({ ...n, expiresAt: now + TOAST_DURATION_MS })),
         ]);
-        // Play sound for the highest-priority new notification
-        const priority = ['PAYMENT_REMINDER', 'BROADCAST', 'CREDENTIAL_SHARED', 'OPEN_QUEUE_POST'];
-        const topType = newOnes.find(n => priority.includes(n.type))?.type ?? newOnes[0].type;
-        playPing(topType);
+        // Only play sound AFTER the initial page load — user must interact first
+        if (!isInitialPollRef.current) {
+          const priority = ['PAYMENT_REMINDER', 'BROADCAST', 'CREDENTIAL_SHARED', 'OPEN_QUEUE_POST'];
+          const topType = newOnes.find(n => priority.includes(n.type))?.type ?? newOnes[0].type;
+          await playPing(topType);
+        }
       }
     } catch { /* silent */ }
   }, []);
 
   // Initial poll + periodic
   useEffect(() => {
-    // Wait 2s before first poll so page can settle
-    const init = setTimeout(poll, 2000);
+    const init = setTimeout(async () => {
+      await poll(); // first poll — marks existing notifs as seen, NO sound
+      isInitialPollRef.current = false; // from here on, sounds will play
+    }, 2000);
     timerRef.current = setInterval(poll, 30_000);
     return () => {
       clearTimeout(init);
